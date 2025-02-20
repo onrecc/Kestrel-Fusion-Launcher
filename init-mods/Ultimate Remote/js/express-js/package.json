@@ -1,0 +1,15 @@
+{
+  "name": "cmodulefolder",
+  "version": "1.0.0",
+  "description": "This folder is used just for install some modules into this mod and not having to install the modules into the entire launcher.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "ws": "^8.14.2"
+  }
+}

@@ -1,0 +1,19 @@
+{
+    
+    "maxTimeToRace": 840, // The limit of a race is 14 minutes max, after the race will be stopped (14 * 60 = 840)
+    
+    "canVehiclesBeDestroyed": true, // If set to "false", in a race the vehicles cannot take damages
+
+    "distanceToWin": 1.2, // The maximum distance with the goal to win the races
+
+    "maxPlayersInARace": 6, // The maximum of players in the same race
+    "minPlayersInARace": 2, // The minimum of players in the same race (don't put something lower than 2)
+
+    "isPlayersVisibleInRaces": true, // If is "false", in a race the players can't see other players that are racing and so there is collisions
+
+    "trafficDensity": 0.3, // From 0 to 1, 1 is the normal density
+
+    "coinsGived": 5585, // Coins gived to the winner
+    
+    "canLogInConsole": false
+}

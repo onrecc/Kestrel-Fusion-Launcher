@@ -1,0 +1,51 @@
+Character me(GetCharacter());
+Global Character cPlayer1;
+Global Character cPlayer2;
+
+Bool continueLoop(true);
+
+Number minDistance(0.5);
+
+State Base () {
+	Actions
+	{
+		While (continueLoop) {
+			
+			if(!me) {
+
+				wait(1.5);
+				
+				if(!me) {
+					continueLoop = false;
+					goto charEnd();
+				}
+			}
+
+            if(me.DistanceTo(cPlayer1) > 16) {
+				continueLoop = false;
+                goto charEnd();
+            }
+
+			if(me.DistanceTo(cPlayer1) > minDistance) {
+            	me.FollowCharacter(cPlayer1, minDistance, 4.3);
+				wait(1.2);
+			}
+			
+			wait(0.6);
+
+		};
+ 	};
+};
+
+
+State charEnd () {
+	Actions
+	{
+		if(me) {
+			me.Kill();
+		}
+	};
+};
+
+
+Base();

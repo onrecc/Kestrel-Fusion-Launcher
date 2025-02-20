@@ -95,29 +95,55 @@ ipcMain.on('viewMod', (ev, modname) => {
 // ************* Launch the game : *************
 // *********************************************
 
+let cmdToRunOnClosed = [];
+
 ipcMain.on('launch', () => {
     
     if(!canDoOtherActions) return;
     canDoOtherActions = false;
+
+    if(cmdToRunOnClosed.length != 0) {
+        console.log('say that the process is stopped to mods for after say that the process is relaunched');
+        cmdToRunOnClosed.forEach(
+            cmd => {
+                if(typeof(cmd) == 'string') {
+                    childProcess.spawn(cmd,
+                    {
+                        shell: true,
+                        detached: true
+                    });
+                    
+                } else {
+                    cmd();
+                }
+            }
+        );
+        cmdToRunOnClosed = [];
+    }
     
     globalVars.mainWindow.webContents.send('setStartButt', 'Apply mods..');
 
     console.log('apply modifications..');
 
-    let cmdToRunAfter = modManager.launchMods();
+    let cmdToRunLater = modManager.launchMods();
+
+    let cmdToRunAfter = cmdToRunLater.codeToLaunchAfter;
+    cmdToRunOnClosed = cmdToRunLater.codeToLaunchOnClosed;
 
     console.log(cmdToRunAfter.length + ' scripts to launch after the game is launched');
 
     console.log('launching..');
-    
-    globalVars.mainWindow.webContents.send('setStartButt', 'LAUNCHING..');
 
     if(config['not-launch-game']) {
         if(config['close-after-game-launched']) {
             globalVars.app.quit();
+        } else {
+            globalVars.mainWindow.webContents.send('setStartButt', 'MODS APPLIED');
         }
         return;
     }
+    
+    globalVars.mainWindow.webContents.send('setStartButt', 'LAUNCHING..');
 
     // Launch the game :
     setTimeout(() => {
@@ -151,12 +177,16 @@ ipcMain.on('launch', () => {
                 alertWindow('Error while launching the game :\n' + (typeof(errbuffer) == "string" ? errbuffer : 'Cannot translate error buffer'));
             });
 
-            terminal.stdin.write(JSON.stringify(pathExeFile) + '\n');
+            // terminal.stdin.write(JSON.stringify(pathExeFile) + '\n');
+            terminal.stdin.write('cd ' + JSON.stringify(config['game-location']) + '\n' + JSON.stringify(config.exename) + '\n');
+            // terminal.stdout.on('data', datas => {
+            //     console.log(datas.toString('utf8'))
+            // });
 
             setTimeout(() => {
                 console.log('removing terminal');
                 terminal.kill('SIGINT');
-            }, 1000);
+            }, 5000);
         } else {
             childProcess.spawn(pathExeFile, {
                 detached: true,
@@ -176,29 +206,18 @@ ipcMain.on('launch', () => {
         // });
 
         let launchedGameCount = 0;
+        let gameAlreadyStarted = false;
 
         let checkGameLaunchedInt = setInterval(() => {
-            if(!globalVars.isGameLaunched) {
-                launchedGameCount = 0;
-                return;
-            }
+            if(gameAlreadyStarted) {
+                if(globalVars.isGameLaunched) return;
 
-            if(launchedGameCount < 200) {
-                launchedGameCount++;
-                return;
-            }
+                console.log('game closed');
+                clearInterval( checkGameLaunchedInt );
 
-            clearInterval( checkGameLaunchedInt );
-
-            // Wait before launch scripts because the game is loading
-            setTimeout(() => {
-                console.log('launching ' + cmdToRunAfter.length + ' scripts');
-                cmdToRunAfter.forEach(
+                cmdToRunOnClosed.forEach(
                     cmd => {
                         if(typeof(cmd) == 'string') {
-                            // childProcess.exec( cmd )
-
-                            
                             childProcess.spawn(cmd,
                             {
                                 shell: true,
@@ -210,22 +229,57 @@ ipcMain.on('launch', () => {
                         }
                     }
                 );
+                cmdToRunOnClosed = [];
+            } else {
+                if(!globalVars.isGameLaunched) {
+                    launchedGameCount = 0;
+                    return;
+                }
 
-                cmdToRunAfter = [];
+                if(launchedGameCount < 200) {
+                    launchedGameCount++;
+                    return;
+                }
 
-                
+                gameAlreadyStarted = true;
+
+                // Wait before launch scripts because the game is loading
                 setTimeout(() => {
+                    console.log('launching ' + cmdToRunAfter.length + ' scripts');
+                    cmdToRunAfter.forEach(
+                        cmd => {
+                            if(typeof(cmd) == 'string') {
+                                // childProcess.exec( cmd )
 
-                    if(config['close-after-game-launched']) {
-                        globalVars.app.quit();
-                        return;
-                    }
+                                
+                                childProcess.spawn(cmd,
+                                {
+                                    shell: true,
+                                    detached: true
+                                });
+                                
+                            } else {
+                                cmd();
+                            }
+                        }
+                    );
 
-                    globalVars.mainWindow.webContents.send('setStartButt', 'LAUNCH GAME');
-                    unfreezePage();
-                }, config['open-in-cmd'] ? 2000 : 1000);
+                    cmdToRunAfter = [];
 
-            }, 5700);
+                    
+                    setTimeout(() => {
+
+                        if(config['close-after-game-launched']) {
+                            globalVars.app.quit();
+                            return;
+                        }
+
+                        globalVars.mainWindow.webContents.send('setStartButt', 'LAUNCH GAME');
+                        unfreezePage();
+                    }, config['open-in-cmd'] ? 2000 : 1000);
+
+                }, 5700);
+            }
             
         }, 80);
 

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rules of the server</title>
+
+    <style>
+
+        * {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+        }
+
+        body {
+            text-align: center;
+        }
+
+        #rules-container {
+            overflow: auto;
+            /* height: 276px; */
+            height: calc(100vh - 165px);
+            overflow-wrap: break-word;
+        }
+
+        #rules-txt {
+            font-size: 25px;
+            /* width: 100%; */
+            /* overflow-x: clip; */
+            /* overflow-y: auto; */
+            /* white-space: nowrap; */
+            text-align: start;
+        }
+
+        #buttons-container {
+            margin-top: 5px;
+            text-align: center;
+            display: inline-flex;
+            gap: 15px;
+        }
+
+        #buttons-container > button {
+            font-size: 23px;
+            border: 1px solid black;
+            background: white;
+            cursor: pointer;
+            user-select: none;
+            padding: 6px 15px;
+            border-radius: 5px;
+        }
+
+        #window-title {
+            font-size: 35px;
+        }
+        
+    </style>
+</head>
+<body>
+    <span id="window-title">Rules of the server :</span>
+    <div id="rules-container">
+        <p id="rules-txt" aria-label="rules of the server that you want to join"></p>
+    </div>
+    <div id="buttons-container">
+        <button aria-label="accept the rules of the server that you want to join" disabled="true" onclick="
+            electronAPI.setIsUserAccepting(true);
+        ">Accept</button>
+        <button aria-label="not join the server" onclick="
+            electronAPI.setIsUserAccepting(false);
+        ">Cancel</button>
+    </div>
+
+    <script>
+        let rulesContainer;
+        window.onload = () => {
+
+            rulesContainer = document.querySelector('#rules-container');
+            // rulesContainer.onscroll = (ev) => {
+            //     if(rulesContainer.scrollTop + rulesContainer.offsetHeight < rulesContainer.scrollHeight) return;
+
+            //     rulesContainer.onscroll = null;
+
+            //     document.querySelector('button').disabled = false;
+            // }
+
+            setTimeout(() => {
+
+                if(true || rulesContainer.scrollTop + rulesContainer.offsetHeight >= rulesContainer.scrollHeight) {
+                    // rulesContainer.onscroll = null;
+                    document.querySelector('button').disabled = false;
+                }
+            }, 2500);
+        }
+    </script>
+</body>
+</html>

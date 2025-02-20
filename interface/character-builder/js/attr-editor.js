@@ -99,10 +99,10 @@ function addAttrInput(inputdatas) {
 // ** Adding the cancel button **
 (()=>{
 
-    const saveButton = document.createElement('button');
+    const cancelMButton = document.createElement('button');
 
-    saveButton.innerText = 'Cancel';
-    saveButton.style = `
+    cancelMButton.innerText = 'Cancel';
+    cancelMButton.style = `
     font-size: 18px;
     padding: 2px 25px;
     cursor: pointer;
@@ -118,15 +118,15 @@ function addAttrInput(inputdatas) {
     margin-right: 2.5%;
     `;
 
-    saveButton.onclick = () => {
-        isOkTo('Are you sure that you want to quit ?\nIf you have not compiled the mod your modifications are not saved.', (wantoquit=>{
+    cancelMButton.onclick = () => {
+        isOkTo("Are you sure that you want to quit ?\nIf you have not compiled the mod your modifications won't be saved.", (wantoquit=>{
             if(!wantoquit) return;
             
             electronAPI.goHome();
         }));
     }
 
-    attributEditor.appendChild(saveButton);
+    attributEditor.appendChild(cancelMButton);
     attributEditor.appendChild(document.createElement('p'));
 
 })();
@@ -203,7 +203,7 @@ electronAPI.onInit((charobj, charTypesList) => {
             let childsOfInput = [];
 
             for (const key in charTypesList) {
-                charTypesList[key];
+                
                 let el = document.createElement('option');
 
                 el.value = key;
@@ -214,6 +214,78 @@ electronAPI.onInit((charobj, charTypesList) => {
             return childsOfInput;
         })()
     })
+
+    addAttrInput({
+        text: 'other categorie',
+        type: 'select',
+        // value: (()=>{
+        //     for (const key in charTypesList) {
+        //         return charTypesList[key].cat;
+        //         break;
+        //     }
+        // })(),
+        value: 'no-cat',
+        onchange: (el) => {
+
+            if(el.value == 'no-cat') {
+                charDatas.otherClasses = [];
+                return;
+            }
+
+            if(!charTypesList[el.value]) return;
+
+            charDatas.otherClasses = [ charTypesList[el.value].cat ];
+        },
+        selectChilds: (()=>{
+
+            let childsOfInput = [];
+            
+            let firstOption = document.createElement('option');
+
+            firstOption.value = 'no-cat';
+            firstOption.innerText = 'Nothing';
+            childsOfInput.push( firstOption );
+
+            for (const key in charTypesList) {
+                
+                let el = document.createElement('option');
+
+                el.value = key;
+                el.innerText = key;
+                childsOfInput.push(el);
+            }
+
+            return childsOfInput;
+        })()
+    });
+
+    addAttrInput({
+        text: 'have chicken',
+        type: 'select',
+        value: false,
+        onchange: (el) => {
+
+            charDatas.hasChicken = el.value != 'no';
+            
+        },
+        selectChilds: (()=>{
+
+            let childsOfInput = [];
+
+            for (const key of [
+                "no",
+                "yes"
+            ]) {
+                
+                let el = document.createElement('option');
+
+                el.value = key;
+                el.innerText = key[0].toUpperCase() + key.slice(1);
+                childsOfInput.push(el);
+            };
+            return childsOfInput;
+        })()
+    });
 
     addAttrInput({
         text: 'price',

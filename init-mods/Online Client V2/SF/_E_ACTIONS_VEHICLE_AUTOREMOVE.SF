@@ -1,0 +1,17 @@
+Vehicle me(GetVehicle());
+
+State Base() {
+    
+    Actions
+    {
+        me.SetSeatLocked(#Driver, true);
+        me.SetInvulnerable(true);
+        
+        wait(0.15);
+        if(me) {
+            me.Destroy();
+        }
+    };
+};
+
+Base();

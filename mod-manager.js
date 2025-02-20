@@ -26,14 +26,15 @@ function loadMod(modpath) {
         modInfos.name = path.basename( modpath );
         if(!modInfos.addons) {
             modInfos.addons = {
-                SF: fs.existsSync(path.join(modpath, '/SF')),
-                python: fs.existsSync(path.join(modpath, '/python')),
-                js: fs.existsSync(path.join(modpath, '/js')),
-                bat: fs.existsSync(path.join(modpath, '/bat')),
-                ressourcePack: fs.existsSync(path.join(modpath, '/install')),
-                text: fs.existsSync(path.join(modpath, '/text')),
-                chars: fs.existsSync(path.join(modpath, '/chars')),
-                audio: fs.existsSync(path.join(modpath, '/audio'))
+                SF: fs.existsSync(path.join(modpath, '/SF')) || undefined,
+                python: fs.existsSync(path.join(modpath, '/python')) || undefined,
+                js: fs.existsSync(path.join(modpath, '/js')) || undefined,
+                bat: fs.existsSync(path.join(modpath, '/bat')) || undefined,
+                ressourcePack: fs.existsSync(path.join(modpath, '/install')) || undefined,
+                text: fs.existsSync(path.join(modpath, '/text')) || undefined,
+                chars: fs.existsSync(path.join(modpath, '/chars')) || undefined,
+                collection: fs.existsSync(path.join(modpath, '/collection')) || undefined,
+                audio: fs.existsSync(path.join(modpath, '/audio')) || undefined,
             }
 
             if(!modInfos.devmode) {
@@ -63,7 +64,16 @@ function loadMod(modpath) {
 
 function loadAllMods() {
 
-    const timeBeforeLoadingMods = config['not-use-date'] ? 0 : (new Date().getTime());
+    console.log('loading mods..');
+    
+    let timeBeforeLoadingMods = 0;
+
+    try {
+        timeBeforeLoadingMods = config['not-use-date'] ? 0 : (new Date().getTime());
+    } catch (error) {
+        console.error(error);
+        console.log('error while using new Date().getTime()');
+    }
     
 
     modsLoaded = [];
@@ -78,13 +88,23 @@ function loadAllMods() {
         }
     );
 
-    if(!config['not-use-date']) console.log('mods loaded in ' + (new Date().getTime() - timeBeforeLoadingMods) + 'ms');
+    if(!config['not-use-date']) {
+        try {
+            console.log('mods loadeds in ' + (new Date().getTime() - timeBeforeLoadingMods) + 'ms');
+        } catch (error) {
+            console.error(error);
+            console.log('error while using new Date().getTime()');
+            console.log('mods loadeds');
+        }
+    }
 
     return haveModNotLoaded;
 }
 
 /**
  * This function is executed when a mod is selected / unselected
+ * NOTE: It's possible that a mod are disabled not by the user but by a code like when you updated the app for example.
+ * But everytime a mod is enabled it's because the user manually enabled it so it's why there is popups messages when a mod is enabled and never when a mod is disabled.
  * 
  * @param {String} modname 
  * @param {Boolean} isactivated 
@@ -95,12 +115,31 @@ function setModIsActivated(modname, isactivated) {
 
     if(modToChange == -1) return;
 
+    
+    if(isactivated && modsLoaded[modToChange].readme) {
+
+        let modPathF = path.join(modsFolder, modname);
+
+        let readmePath = path.join(modPathF, modsLoaded[modToChange].readme+'');
+
+        let readmeText = '';
+
+        if(fs.existsSync(readmePath)) {
+            readmeText = `Message from the mod:\n${fs.readFileSync(readmePath, {encoding:'utf8'})}`;
+            readmeText = readmeText.replace(/{MODPATH}/g, modPathF);
+        } else {
+            readmeText = `Error: the mod try to show a text at this path:\n"${readmePath}"\nNo file found at this path.`;
+        }
+
+        globalVars.mainWindow.webContents.send('alert', readmeText, null);
+    }
+
 
     // add / remove the new characters of the mod before change the activated mods
     if(modsLoaded[modToChange].addons.chars) {
 
-        const characterManager = require('./character-manager/character-manager'); // (don't load this module at the start of the app)
-        const charFileManager = require('./character-manager/char-file-manager');
+        let characterManager = require('./character-manager/character-manager'); // (don't load this module at the start of the app)
+        let charFileManager = require('./character-manager/char-file-manager');
 
         const charsFolderPath = path.join(modsFolder, modname, '/chars');
 
@@ -168,6 +207,9 @@ function setModIsActivated(modname, isactivated) {
 
                                 return;
                             }
+
+                            // Don't let the mod editing a .exe :
+                            if(filename.toLowerCase().endsWith('.exe')) return;
     
                             const gamePathFile = path.join(gamepath, filename);
     
@@ -240,9 +282,44 @@ function setModIsActivated(modname, isactivated) {
     // Apply custom audio
     if(modsLoaded[modToChange].addons.audio) updateAudioList();
 
+    
+    // add custom lines to collection.txt
+    if(modsLoaded[modToChange].addons.collection) {
+
+        let characterManager = require('./character-manager/character-manager'); // (don't load this module at the start of the app)
+        let charFileManager = require('./character-manager/char-file-manager');
+
+        characterManager.updateCharsListFile(false);
+        
+    }
+
+    // the warning :
+    if(
+        isactivated &&
+        (modsLoaded[modToChange].addons.js
+        || modsLoaded[modToChange].addons.python
+        || modsLoaded[modToChange].addons.bat)
+    ) {
+        globalVars.mainWindow.webContents.send('alert',
+        "WARN : this mod execute code when you use it.\n" +
+        "*If you don't trust the author disable this mod.*"
+        , true
+        );
+    }
+
     config.save();
 
 }
+
+// Object gived to js scripts
+const moddingInfosKF = {
+    gamePath: config['game-location'],
+    exeGameName: config.exename,
+    modulesLocation: path.join(__dirname, 'node_modules'),
+    gameScriptToJSAPI: undefined // auto edited
+};
+
+
 
 
 function launchMods() {
@@ -257,22 +334,28 @@ function launchMods() {
 
     let textToAddInScriptList = '\n; Modded scripts :';
 
+    // Functions executed after that the game totally started :
     let codeToLaunchAfter = [];
+    // Functions executed after that the game is closed :
+    let codeToLaunchOnClosed = [];
 
-    let indexSFFileNumber = 32;
+    // The _.js mod files loaded
+    let JSModModules = [];
+
+    let indexSFFileNumber = 60;
 
     const levelsFocus = [
-        '/LEVELS/LEGO_CITY/LEGO_CITY/AI/'
-        // '/LEVELS/LEGO_CITY/LEGO_CITY/IS_SPACE_CENTRE/IS_SPACE_CENTRE_3322/AI/'
+        '/LEVELS/LEG' + 'O_CITY/LE' + 'GO_CITY/AI/',
+        // '/LEVELS/STANDALONES/GAMEMECHANICSTESTAREA/AI/'
+        // '/LEVELS/L' + 'EG' + 'O_CITY/L' + 'EG' + 'O_CITY/IS_SPACE_CENTRE/IS_SPACE_CENTRE_3322/AI/'
     ];
 
+    moddingInfosKF.gameScriptToJSAPI = undefined;
+
+    let needJSCAPI = false;
 
     let customEnvForForkedJSModules = {...process.env};
-    customEnvForForkedJSModules.MODINFOS = JSON.stringify({
-        gamePath: config['game-location'],
-        exeGameName: config.exename,
-        modulesLocation: path.join(__dirname, 'node_modules')
-    });
+    customEnvForForkedJSModules.MODINFOS = JSON.stringify(moddingInfosKF);
 
     function execInNewBatProcess(commandtoex) {
         child_process.spawn(commandtoex,
@@ -294,6 +377,8 @@ function launchMods() {
 
             fs.readdirSync( dirModP ).forEach(
                 filename => {
+
+                    if(path.extname(filename).toLowerCase() != ".sf") return;
                     
                     const SFFileIndex = indexSFFileNumber;
                     indexSFFileNumber++;
@@ -303,7 +388,9 @@ function launchMods() {
 
                     if(filename.startsWith('_')) SFFileName = 'MOD' + filename.toUpperCase().replace(/-/g, '_').replace(/ /g, '_');
     
-                    let scriptData = fs.readFileSync( path.join( dirModP, filename ) );
+                    let scriptData = fs.readFileSync( path.join( dirModP, filename ), 'utf8' );
+
+                    scriptData = require('./compiler-game-script').compileScriptCode( scriptData );
     
                     levelsFocus.forEach(
                         levelpath => {
@@ -359,23 +446,97 @@ function launchMods() {
 
                     if(path.extname(filename).toLowerCase() != ".js") return;
 
+
+                    let execJSMod;
+
+                    if(filename.toLowerCase().endsWith('_.js')) {
+                        
+                        if(!needJSCAPI) {
+                            needJSCAPI = true;
+
+                            // Add the JS-API :
+                            moddingInfosKF.gameScriptToJSAPI = require('./js-to-game-scripts');
+                            moddingInfosKF.gameScriptToJSAPI.modInfos = {...moddingInfosKF};
+                            moddingInfosKF.gameScriptToJSAPI.JSModModules = JSModModules;
+                            codeToLaunchAfter.push(
+                                () => {
+                                    require('./js-to-game-scripts').cModuleStart();
+                                }
+                            );
+                            codeToLaunchOnClosed.push(
+                                () => {
+                                    require('./js-to-game-scripts').cModuleClose();
+                                }
+                            );
+                            
+                            // Add the .SF API :
+                            const SFFileIndex = indexSFFileNumber;
+                            indexSFFileNumber++;
+
+                            let SFFileName = 'LEVEL' + SFFileIndex + '.SF';
+
+                            let scriptData = fs.readFileSync( path.join( __dirname, 'js-connection-main.sf' ) );
+            
+                            levelsFocus.forEach(
+                                levelpath => {
+                                    
+                                    const pathFile = path.join(levelpath, SFFileName);
+
+                                    if( fs.existsSync(path.join( config['game-location'], pathFile )) ) backupManager.backupFile( pathFile );
+                                    
+                                    fs.writeFileSync(
+                                        path.join( config['game-location'], pathFile ),
+                                        scriptData
+                                    );
+                                }
+                            )
+            
+            
+                            textToAddInScriptList += '\n' + SFFileName.toLowerCase().split('.', 1)[0] + '	;	game script to JS communication API';
+                        }
+                        
+
+                        // Execute the .js mod file
+
+                        execJSMod = () => {
+
+                            let modModule = require( path.join(dirModP, filename) );
+                            
+                            modModule.modInfos = {...moddingInfosKF};
+                            modModule.modInfos.modName = modname;
+                            modModule.modInfos.showMessage = (messagetxt, usespecialsyntaxe) => {
+                                globalVars.mainWindow.webContents.send(
+                                    'alert', '[' + modname + '] :\n' + (messagetxt || ''), usespecialsyntaxe
+                                );
+                            };
+
+                            if(modModule.onStart) modModule.onStart();
+
+                            JSModModules.push(modModule);
+                        }
+                        codeToLaunchOnClosed.push(() => {
+                            let modModule = require( path.join(dirModP, filename) );
+                            if(modModule.onClosed) modModule.onClosed();
+                        });
+                    } else if(filename.toLowerCase().endsWith('_fork.js')) {
+                        execJSMod = () => {
+                            child_process.fork(path.join(dirModP, filename), {
+                                env: customEnvForForkedJSModules
+                            });
+                        }
+                    } else {
+                        return;
+                    }
+                    
                     
                     if(filename.startsWith('_')) {
 
-                        codeToLaunchAfter.push(
-                            () => {
-                                child_process.fork(path.join(dirModP, filename), {
-                                    env: customEnvForForkedJSModules
-                                });
-                            }
-                        );
+                        codeToLaunchAfter.push( execJSMod );
 
                         return;
                     }
 
-                    child_process.fork(path.join(dirModP, filename), {
-                        env: customEnvForForkedJSModules
-                    });
+                    execJSMod();
                     
                     // // If the script will be launched after
                     // if(filename.startsWith('_')) {
@@ -403,13 +564,13 @@ function launchMods() {
                     // If the script will be launched after
                     if(filename.startsWith('_')) {
                         codeToLaunchAfter.push(
-                            "python " + JSON.stringify(path.join(dirModP, filename))
+                            "py " + JSON.stringify(path.join(dirModP, filename))
                         );
                         return;
                     }
 
-                    // child_process.exec("python " + JSON.stringify(path.join(dirModP, filename)));
-                    execInNewBatProcess("python " + JSON.stringify(path.join(dirModP, filename)));
+                    // child_process.exec("py " + JSON.stringify(path.join(dirModP, filename)));
+                    execInNewBatProcess("py " + JSON.stringify(path.join(dirModP, filename)));
                 }
             )
         }
@@ -442,9 +603,17 @@ function launchMods() {
 
 
     config.save();
+    
+
+    codeToLaunchOnClosed.push(()=>{
+        // When game stopped remove all the js modules in the list
+        while (JSModModules.length != 0) {
+            JSModModules.pop();
+        }
+    });
 
     // Return code to run when the game is launched
-    return codeToLaunchAfter;
+    return {codeToLaunchAfter, codeToLaunchOnClosed};
 
 }
 
@@ -652,6 +821,8 @@ function updateAudioList() {
 }
 
 
+const initTextModDatas = '\n' + fs.readFileSync(path.join(__dirname, 'text-added-to-game.txt'), {encoding:'utf8'});
+
 function updateCSVTexts(cansaveconfig) {
 
     config['activated-mods'] = config['activated-mods'].filter( modname => modsLoaded.find(m => m.name == modname) != null );
@@ -721,7 +892,7 @@ function updateCSVTexts(cansaveconfig) {
                 );
             }
 
-            return newTextList + textToAddInTextList;
+            return newTextList + textToAddInTextList + initTextModDatas;
         },
         {
             init: {encoding: 'utf8'},
@@ -765,3 +936,4 @@ exports.launchMods = launchMods;
 exports.getModsLoaded = () => modsLoaded;
 exports.modsFolder = modsFolder;
 exports.addInitMods = addInitMods;
+exports.updateCSVTexts = updateCSVTexts;

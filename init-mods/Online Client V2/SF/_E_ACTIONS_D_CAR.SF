@@ -1,0 +1,156 @@
+Vehicle me(GetVehicle());
+
+Global Character cPlayer1;
+Global Character cPlayer2;
+
+Number damageApplyedToVehicles(2);
+
+Number damageDistance( 0.5 );
+Number vehicleDamageDistance( 0.8 );
+
+
+Bool canBeDestroyedNow(false);
+Bool willDestroyVehicle(false);
+
+Number otherPlyrsDetection(4);
+Global CityArray onlineChars;
+Global CityArray onlineVehicles;
+
+State Base() {
+    Conditions
+    {
+        if(!me) {
+            goto EndState();
+        }
+
+        if(canBeDestroyedNow) {
+
+            if(cPlayer1 && cPlayer1.GetHealth() > 0 && (!cPlayer1.InContext("DeathContext"))) {
+
+                if(cPlayer1.GetVehicle()) {
+                    
+
+                    Vehicle plyrVehicle (cPlayer1.GetVehicle());
+
+                    if(plyrVehicle.DistanceTo(me) < vehicleDamageDistance) {
+
+                        willDestroyVehicle = true;
+                        
+                        if(plyrVehicle.GetDriver()) {
+                            Number vehicleHP(0);
+                            vehicleHP = plyrVehicle.GetHealth(#Current);
+                            vehicleHP = vehicleHP - damageApplyedToVehicles;
+
+                            if(vehicleHP < 1) {
+                                plyrVehicle.Destroy();
+                            } else {
+                                plyrVehicle.SetHealth(#Set, vehicleHP);
+                            }
+                        }
+
+                    }
+
+                } else {
+                    
+
+                    if(cPlayer1.DistanceTo(me) < damageDistance) {
+                        
+                        willDestroyVehicle = true;
+
+                        cPlayer1.Kill();
+                        
+                    }
+                }
+
+            }
+
+            if(!willDestroyVehicle) {
+            
+                otherPlyrsDetection = otherPlyrsDetection - 1;
+                if(otherPlyrsDetection < 0) {
+                    otherPlyrsDetection = 2;
+
+                    Number plyrIndex(onlineChars.Size());
+
+                    While (plyrIndex > 0) {
+                        plyrIndex = plyrIndex - 1;
+
+                        //TODO IF CRASH DO "if(onlineChars.Get(plyrIndex))" BEFORE CREATE VARIABLE
+                        Character plyrChar(onlineChars.Get(plyrIndex));
+
+                        if(plyrChar) {
+                            
+                            if(onlineVehicles.Get(plyrIndex)) {
+                                if(plyrChar && plyrChar.DistanceTo(me) < vehicleDamageDistance + 0.05) {
+                                    willDestroyVehicle = true;
+                                    plyrIndex = -1;
+                                }
+
+                            } else {
+                                
+                                if(plyrChar && plyrChar.DistanceTo(me) < damageDistance + 0.05) {
+                                    willDestroyVehicle = true;
+                                    plyrIndex = -1;
+                                }
+                            }
+                        }
+                    };
+                    
+                }
+            }
+            
+            if(willDestroyVehicle) {
+            
+                canBeDestroyedNow = false;
+                
+                // Apply damage to vehicle:
+            
+                me.SetInvulnerable(false);
+                me.SetBoobyTrap(true);
+
+                Vehicle tempVehicl;
+                me.SetHealth(#Set, 1);
+                tempVehicl = CreateAiVehicle("FuelCarriage", "Trains", me.GetPosition(), me.GetDirection());
+                tempVehicl.SetScript("MOD_E_ACTIONS_VEHICLE_AUTOREMOVE");
+                
+                wait(2);
+
+                if(me) {
+                    me.Destroy();
+                }
+                
+                goto EndState();
+            }
+        }
+        
+    };
+    Actions
+    {
+        me.SetSeatLocked(#Driver, true);
+        me.SetInvulnerable(true);
+        
+        wait(0.2);
+
+        if(me) {
+        
+            canBeDestroyedNow = true;
+
+        } else {
+            goto EndState();
+        }
+
+        
+        wait(25);
+
+        if(me) {
+            me.Destroy();
+        }
+
+        goto EndState();
+    };
+};
+
+State EndState() {
+};
+
+Base();

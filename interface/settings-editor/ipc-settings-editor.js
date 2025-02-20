@@ -24,8 +24,15 @@ ipcMain.on(idCommunicationWindow + 'save', (ev, editedConfigAttrs) => {
 
     canDoOtherActions = false;
 
+    let reloadAfterShortcuts = editedConfigAttrs['baseShortcut'] != null && editedConfigAttrs['baseShortcut'] != config['baseShortcut'];
+
     for (const key in editedConfigAttrs) {
         config[key] = editedConfigAttrs[key];
+    }
+
+    if(reloadAfterShortcuts) {
+        console.log('Reloading shortcuts..');
+        require('../../js-to-game-scripts').shortcuts.reloadShortcutsUsingBaseShortcut();
     }
 
     config.save();
@@ -35,6 +42,16 @@ ipcMain.on(idCommunicationWindow + 'save', (ev, editedConfigAttrs) => {
         canDoOtherActions = true;
     }, 230);
 });
+
+ipcMain.on(idCommunicationWindow + 'printmsg', (ev, msgToPrint) => {
+
+    require('electron').dialog.showMessageBox({
+        message: msgToPrint,
+        buttons: [],
+        type: 'info'
+    });
+});
+
 
 // When user click on the "cancel" button
 ipcMain.on(idCommunicationWindow + 'cancel', () => {

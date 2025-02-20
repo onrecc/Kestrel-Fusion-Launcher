@@ -59,7 +59,7 @@ const characterClasses = {
     FARMER: {
         id: 'farmer',
         cat: 5,
-        fileid: 'Police'
+        fileid: 'Farmer'
     },
     FIREMAN: {
         id: 'fireman',
@@ -124,6 +124,8 @@ class CustomCharacter {
         this.cheatcode = null;
         // this.class = characterClasses.COP;
         this.class = characterClasses.GENERIC;
+        this.otherClasses = [];
+        this.hasChicken = false;
         this.addedToCustomer = false;
         this.price = 10000;
 
@@ -192,8 +194,6 @@ function removeCharacter(charid) {
 
 
 function updateCharsListFile(canshowinfo) {
-    
-
 
     // *** Editing the .cpj list : ***
     
@@ -209,17 +209,112 @@ function updateCharsListFile(canshowinfo) {
 ; -------------------------------------------------------;
 `;
 
+    if(addedCharsInCPJ.length > 0) addedText += '\n; Characters generated :\n';
+
     addedCharsInCPJ.forEach(
         customchar => {
             addedText += `\ncollect ${toCamecaseString(customchar.id)}    token  ${customchar.price > 0 ? 'buy_in_shop      ' + customchar.price : ''}   cat ${customchar.class.cat}     ${customchar.addedToCustomer ? 'customiser_parts' : ''}                                         ${customchar.cheatcode == null ? '' : 'cheat_code ' + customchar.cheatcode}`;
+
+            if(customchar.otherClasses) {
+                customchar.otherClasses.forEach(
+                    otherClassCharCat => {
+                        if(customchar.class.cat == otherClassCharCat) return;
+                        
+                        addedText += `\ncollect ${toCamecaseString(customchar.id)}    token  ${customchar.price > 0 ? 'buy_in_shop      ' + customchar.price : ''}   cat ${otherClassCharCat}     ${customchar.addedToCustomer ? 'customiser_parts' : ''}                                         ${customchar.cheatcode == null ? '' : 'cheat_code ' + customchar.cheatcode}`;
+                    }
+                );
+            }
             
             console.log(`"${customchar.id}" added in the collection.txt`);
         }
     );
 
+    
+    // Load the custom text in the "collection" mods folders
+
+    let textsReplacers = [];
+
+    let firstNewLines = '';
+
+    let vehiclesCatLines = '';
+
+    let haveAddedTextWithCFolder = false;
+
+    modManager.getModsLoaded().forEach(
+        mod => {
+            if(!mod.addons.collection) return;
+
+            if(!config['activated-mods'].includes(mod.name)) return;
+
+            const collectionLinesPath = path.join(modManager.modsFolder, mod.name, 'collection');
+
+            if(!haveAddedTextWithCFolder) {
+                addedText += '\n\n;Added with the "collection" folder:\n';
+                haveAddedTextWithCFolder = true;
+            }
+
+            fs.readdirSync(collectionLinesPath).forEach(
+                collectionLineFile => {
+
+                    if(path.extname(collectionLineFile).toLowerCase() != '.txt') return;
+
+
+                    const charJSONPath = path.join(collectionLinesPath, collectionLineFile);
+
+                    fs.readFileSync(charJSONPath, {encoding: 'utf8'}).split('\n').forEach(
+                        line => {
+
+                            if(!line) return;
+                            if(line.replace(/[^a-zA-Z0-9/]/g, '').startsWith('//')) return;
+
+                            if( line.startsWith('>') ) {
+
+                                textsReplacers.push({
+                                    r: line.slice(1, line.indexOf('=')),
+                                    v: line.slice(line.indexOf('=') + 1)
+                                });
+                            } else if(line.startsWith('!')) {
+                                firstNewLines += line.slice(1) + '\n';
+                            } else if(line.startsWith('vehiclecat')) {
+                                vehiclesCatLines += line + '\n';
+                            } else {
+                                addedText += '\n' + line;
+                            }
+                    });
+                }
+            );
+
+        }
+    );
+
     // Modify initial file :
     backupManager.loadBackupFile('CHARS/COLLECTION.TXT', (initfiledata) => {
-        return initfiledata + addedText;
+        
+        let newTextList = initfiledata.toString('utf8') + addedText;
+
+        if(vehiclesCatLines) {
+            vehiclesCatLines = '\n; Custom mods vehicle categories :\n' + vehiclesCatLines;
+            let vehicleCatsDefIndex = newTextList.indexOf('iclecate');
+            vehicleCatsDefIndex += 8 + 4 + 642;
+            newTextList = newTextList.slice(0, vehicleCatsDefIndex) + vehiclesCatLines + newTextList.slice(vehicleCatsDefIndex);
+        }
+
+        newTextList = firstNewLines + newTextList;
+
+        if(textsReplacers.length != 0) {
+            newTextList.split('\n').forEach(
+                line => {
+
+                    let lineReplacer = textsReplacers.find(t => line.startsWith(t.r));
+
+                    if(!lineReplacer) return;
+
+                    newTextList = newTextList.replace(line, lineReplacer.v);
+                }
+            );
+        }
+
+        return newTextList;
     }, {
         new: {encoding: 'utf8'},
         init: {encoding: 'utf8'}
@@ -309,6 +404,9 @@ function loadAllCharacters() {
 
 
 loadAllCharacters();
+
+
+exports.updateCharsListFile = updateCharsListFile;
 
 exports.CustomCharacter = CustomCharacter;
 //exports.initCustomCharactersFiles = initCustomCharactersFiles;

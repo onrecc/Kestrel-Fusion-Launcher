@@ -52,7 +52,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     },
 
     goHome: () => {
-        globalVars.openHomeWindow();
+        ipcRenderer.send('cancelAndGoHome');
     },
 
     onUnfreeze: (ev) => {

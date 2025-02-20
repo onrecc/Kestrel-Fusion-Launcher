@@ -1,0 +1,43 @@
+
+Text inputBackId( "R3" );
+
+
+
+Global Character cPlayer1;
+Global Character cPlayer2;
+
+WorldLevel wlCity("Lego_City");
+
+
+Bool cameraP1( true );
+Bool cameraP2( true );
+
+
+State Base() {  
+    Conditions
+    {
+        
+        if(cPlayer1.GetVehicle()) {
+            // if(PlayerHeldButton(cPlayer1, inputBackId)) {
+            if(PlayerHeldButton(inputBackId)) {
+                cameraP1 = false;
+                SnapCameraToDir(1, "Rear");
+            } else {
+                if(!cameraP1) {
+                    cameraP1 = true;
+                    SnapCameraToDir(1, "Front");
+                }
+            }
+        }
+        
+
+    };
+    Actions
+    {
+        while(!wlCity.IsLoaded()) {};
+        wait(2);
+    };
+};
+
+
+Base();

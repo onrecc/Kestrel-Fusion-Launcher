@@ -95,3 +95,8 @@ ipcMain.on('addAsset', (ev, assetid) => {
 ipcMain.on('resetAssets', () => {
     graphicDatas = {};
 });
+
+
+ipcMain.on('cancelAndGoHome', () => {
+    globalVars.openHomeWindow();
+});

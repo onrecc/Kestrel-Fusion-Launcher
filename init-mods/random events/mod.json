@@ -1,3 +1,1 @@
-{
-    "description": "Mod that activate random event every 20 seconds"
-}
+{"description":"Mod that activate random event every 20 seconds","name":"random events","addons":{"SF":true,"python":false,"js":false,"bat":false,"ressourcePack":false,"text":false,"chars":false,"audio":false}}

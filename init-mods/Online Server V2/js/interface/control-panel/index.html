@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Server - Control Panel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="main-box">
+        <div id="players-menu">
+            <label class="cannot-select" style="
+            font-size: 25px;
+            ">Players</label>
+            <div id="players-container"></div>
+        </div>
+        <div id="right-box">
+            <div id="stats-container">
+                <label class="cannot-select" style="
+                font-size: 50px;
+                position: relative;
+                top: 15px;
+                font-size: 5vh;
+                ">Server enabled</label>
+                <label style="
+                margin: 15px;
+                position: relative;
+                top: 15px;" data-stat-role="port" data-stat-txt="Port used : ?"></label>
+                <label style="
+                margin: 15px;
+                position: relative;
+                top: 15px;" data-stat-role="player-number" data-stat-txt="? players"></label>
+                
+                <div style="
+                    position: absolute;
+                    text-align: start;
+                    width: 100%;
+                    top: calc(100% - 75px);
+                    top: 80%;
+                    top: 95px;
+                ">
+                    <button class="small-button" style="margin-bottom: 5px; margin-right: 15px;" data-stat-role="is-players-accepted" data-stat-txt="New Players Allowed : ?" onclick="electronAPI.toogleAcceptPlayers()"></button>
+                    <button class="small-button" style="margin-right: 15px;" data-stat-role="is-pvp-enabled" data-stat-txt="PvP Enabled : ?" onclick="electronAPI.tooglePvP()"></button>
+                    
+                    <button class="small-button" onclick="window.close()">Close Server</button>
+                </div>
+            </div>
+            <div id="plugins-menu">
+                <label class="cannot-select" style="
+                    font-size: 35px;
+                ">Plugins</label>
+                <div id="plugins-container"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

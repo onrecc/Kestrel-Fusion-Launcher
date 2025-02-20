@@ -3,6 +3,7 @@
     "CHAR_EDITOR": 1,
     "LICENSE": 2,
     "COPYRIGHTS": 3,
+    "OTHERLICENSES": 6,
     "UPDATER": 4,
     "SETTINGS_EDITOR": 5
 }

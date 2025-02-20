@@ -1,6 +1,6 @@
-// **************************************************************
-// This module is called when you open the app for the first time
-// **************************************************************
+// *****************************************************************************************************
+// This module is called when you open the app for the first time or when you launch it after updated it
+// *****************************************************************************************************
 
 
 
@@ -12,7 +12,7 @@ const fs = require('fs');
 
 
 backupManager.backupFile('/LEVELS/LEG' + 'O_CITY/L' + 'EG' + 'O_CITY/AI/SCRIPT.TXT');
-
+backupManager.backupFile('/LEVELS/STANDALONES/GAMEMECHANICSTESTAREA/AI/SCRIPT.TXT');
 
 
 const modManager = require('./mod-manager');
@@ -25,6 +25,9 @@ modManager.loadAllMods();
 modManager.getModsLoaded().forEach(
     mod => modManager.setModIsActivated( mod.name, false )
 );
+
+// Add initial modded text
+modManager.updateCSVTexts(false);
 
 
 fs.writeFileSync(path.join(config['game-location'], 'CHARS/MINIFIGS/SUPER_CHARACTERS/HATS/KFEMPTYMODEL.GSC'), '');

@@ -10,7 +10,7 @@ function addGraphicInput(inputdatas) {
 
     let {id, name, isImportant} = inputdatas;
 
-    if(isImportant == null) isImportant = true;
+    if(isImportant !== false) isImportant = true;
 
     let baseGInputElement = document.createElement('div');
 
@@ -52,8 +52,8 @@ function addGraphicInput(inputdatas) {
             }
             if(assetfilename == null) {
                 assetfilename = '';
-                checkboxHasFile.checked = isImportant == false;
-                graphicInputD.added = isImportant == false;
+                checkboxHasFile.checked = isImportant === false;
+                graphicInputD.added = isImportant === false;
                 el.innerText = 'Add file';
             } else {
                 checkboxHasFile.checked = true;

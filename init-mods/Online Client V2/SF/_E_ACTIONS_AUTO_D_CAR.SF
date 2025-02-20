@@ -1,0 +1,80 @@
+Vehicle me(GetVehicle());
+
+Global Character cPlayer1;
+Global Character cPlayer2;
+
+Number damageApplyedToVehicles(2);
+
+Number damageDistance( 0.6 );
+Number vehicleDamageDistance( 0.8 );
+
+State Base() {
+    
+    Actions
+    {
+        me.SetSeatLocked(#Driver, true);
+        me.SetInvulnerable(true);
+        
+        wait(0.1);
+
+        if(me) {
+
+            if(cPlayer1 && cPlayer1.GetHealth() > 0 && (!cPlayer1.InContext("DeathContext"))) {
+
+                if(cPlayer1.GetVehicle()) {
+
+                    Vehicle plyrVehicle (cPlayer1.GetVehicle());
+
+                    if(plyrVehicle.DistanceTo(me) < vehicleDamageDistance) {
+                        
+                        if(plyrVehicle.GetDriver()) {
+                            Number vehicleHP(0);
+                            vehicleHP = plyrVehicle.GetHealth(#Current);
+                            vehicleHP = vehicleHP - damageApplyedToVehicles;
+
+                            if(vehicleHP < 1) {
+                                plyrVehicle.Destroy();
+                            } else {
+                                plyrVehicle.SetHealth(#Set, vehicleHP);
+                            }
+                        }
+
+                    }
+
+                } else {
+                    
+
+                    if(cPlayer1.DistanceTo(me) < damageDistance) {
+
+                        cPlayer1.Kill();
+                        
+                    }
+                }
+
+            }
+            
+            
+            // Apply damage to vehicle:
+            me.SetInvulnerable(false);
+            me.SetBoobyTrap(true);
+
+            Vehicle tempVehicl;
+            tempVehicl = CreateAiVehicle("FuelCarriage", "Trains", me.GetPosition(), me.GetDirection());
+            tempVehicl.SetScript("MOD_E_ACTIONS_VEHICLE_AUTOREMOVE");
+
+            wait(3);
+
+            if(me) {
+                me.Destroy();
+            }
+        }
+
+        goto EndState();
+        
+    };
+};
+
+State EndState() {
+};
+
+Base();

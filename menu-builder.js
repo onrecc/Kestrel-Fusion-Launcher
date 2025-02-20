@@ -12,7 +12,7 @@ const template = [
             {
                 label: 'reload',
                 click: () => {
-                    globalVars.mainWindow.reload();
+                    if(require('electron').BrowserWindow) require('electron').BrowserWindow.getFocusedWindow().reload();
                 }
             },
             {
@@ -25,7 +25,7 @@ const template = [
                 label: 'open devtool',
                 accelerator: process.platform === 'darwin' ? 'Alt+Cmd+I' : 'Control+Shift+I',
                 click: () => {
-                    globalVars.mainWindow.webContents.openDevTools();
+                    if(require('electron').BrowserWindow) require('electron').BrowserWindow.getFocusedWindow().webContents.openDevTools();
                 }
             },
             {
@@ -206,7 +206,7 @@ const template = [
         label: 'lisence and copyrights',
         submenu: [
             {
-                label: 'view the lisence',
+                label: 'view the licence',
                 click: () => {
                     globalVars.createWindow(
                         require('./window-types.json').LICENSE,
@@ -216,7 +216,17 @@ const template = [
                 }
             },
             {
-                label: 'view the copyrights',
+                label: 'view the other licences',
+                click: () => {
+                    globalVars.createWindow(
+                        require('./window-types.json').OTHERLICENSES,
+                        'license-and-copyrights/preload.js',
+                        true
+                    );
+                }
+            },
+            {
+                label: 'view the other copyrights',
                 click: () => {
                     globalVars.createWindow(
                         require('./window-types.json').COPYRIGHTS,

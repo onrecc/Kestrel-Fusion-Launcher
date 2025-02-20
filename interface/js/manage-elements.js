@@ -2,12 +2,28 @@ const modContainer = document.getElementById('mod-container');
 const freezePageElement = document.getElementById('lock-page');
 const modParam = document.getElementById('mod-param');
 
+let totalEnabledMods = 0;
+const enabledModsLabelElement = document.querySelector('#total-enabled-mods');
+
+setTimeout(() => {
+    enabledModsLabelElement.style.display = '';
+}, 350);
 
 function addMod(modinfo, isused) {
+
+    if(isused) {
+        totalEnabledMods++;
+        enabledModsLabelElement.innerText = totalEnabledMods + ' mods enabled';
+    }
+    
 
     let el = document.createElement('div');
 
     el.className = 'mod-display';
+
+    let modNameID = modinfo.name;
+
+    el.setAttribute('data-mod-id', modNameID);
 
     el.innerHTML = `
     <span></span>
@@ -19,11 +35,20 @@ function addMod(modinfo, isused) {
     `;
 
     //<input type="checkbox" ${isused ? 'checked="true"' : '' }">
-    el.querySelector('span').innerText = modinfo.name;
-    if(modinfo.author) el.querySelector('label').innerText = 'made by ' + modinfo.author;
+    el.querySelector('span').innerText = (modinfo.displayName || modNameID) + '';
+    if(modinfo.subLine) {
+        if(modinfo.author) {
+            el.querySelector('label').innerText = 'made by ' + modinfo.author + ' ' + modinfo.subLine;
+        } else {
+            el.querySelector('label').innerText = '' + modinfo.subLine;
+        }
+    } else if(modinfo.author) {
+        el.querySelector('label').innerText = 'made by ' + modinfo.author;
+    }
 
     el.querySelector('input').onchange = () => {
-        setIsActivatedMod( modinfo.name, el.querySelector('input').checked );
+        let isNowUsed = el.querySelector('input').checked;
+        setIsActivatedMod( modNameID, isNowUsed );
     }
 
     el.onmouseenter = () => {
@@ -38,11 +63,11 @@ function addMod(modinfo, isused) {
             if(modinfo.description && typeof(modinfo.description) == 'string') {
                 textInfo = "Description :\n" + modinfo.description;
             } else {
-                textInfo = "This mod hasen't description";
+                textInfo = "This mod has no description";
             }
 
             if(Object.entries( modinfo.addons ).length != 0) {
-                textInfo += '\nThe mod use :';
+                textInfo += '\nThe mod uses :';
 
                 for (const key in modinfo.addons) {
                     if (Object.hasOwnProperty.call(modinfo.addons, key) && modinfo.addons[key]) {
@@ -58,19 +83,19 @@ function addMod(modinfo, isused) {
 
         // Open mod folders :
         modParam.querySelectorAll('div > button')[1].onclick = () => {
-            window.electronAPI.viewMod( modinfo.name );
+            window.electronAPI.viewMod( modNameID );
         }
 
         // Uninstall/delete a mod :
         modParam.querySelectorAll('div > button')[2].onclick = () => {
-            isOkTo( `Are you sure you want to delete the mod "${modinfo.name}"`, (wanttoremove) => {
+            isOkTo( `Are you sure you want to delete the mod "${modNameID}"`, (wanttoremove) => {
                 if(!wanttoremove) return;
                 if(isPageFrozen) return;
                 setIsPageFrozen(true);
 
                 el.remove();
 
-                window.electronAPI.removeMod( modinfo.name );
+                window.electronAPI.removeMod( modNameID );
             });
         }
     }
@@ -91,7 +116,11 @@ function setIsActivatedMod(modname, isenable) {
     if(isPageFrozen) return;
     setIsPageFrozen(true); // the page will be unfreeze by the main process when the main process finish the modifications
 
-    window.electronAPI.setModIsActivated(modname, isenable)
+    window.electronAPI.setModIsActivated(modname, isenable);
+
+    totalEnabledMods += isenable ? 1 : -1;
+
+    enabledModsLabelElement.innerText = totalEnabledMods + ' mods enabled';
 }
 
 

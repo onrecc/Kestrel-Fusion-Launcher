@@ -15,7 +15,7 @@ function constructUpdaterElement() {
     margin-top: 5px;
     margin-bottom: 5px;
     "
-    >A new version exist!\nDid you want to update the app ?</p>
+    >A new version exists!\nDo you want to update the app ?</p>
     
     <button
     style="

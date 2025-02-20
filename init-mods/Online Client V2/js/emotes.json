@@ -1,0 +1,40 @@
+[
+    {
+        "name": "Talking",
+        "id": "talk"
+    },
+    {
+        "name": "Dancing",
+        "id": ["dance_01", "dance_02"]
+    },
+    {
+        "name": "Salute",
+        "id": "cop_idle_salute",
+        "autostop": true
+    },
+    {
+        "name": "Caffe",
+        "id": "cafe_drink"
+    },
+    {
+        "name": "Point To Direction",
+        "id": "pointatobject",
+        "autostop": true
+    },
+    {
+        "name": "Ponder",
+        "id": "Ponder"
+    },
+    {
+        "name": "Use Chair",
+        "id": "rockingchair_idle"
+    },
+    {
+        "name": "Use Phone",
+        "id": "phone_idle"
+    },
+    {
+        "name": "Jumping",
+        "id": "star_jumps"
+    }
+]

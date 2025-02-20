@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Remote</title>
+    <link rel="stylesheet" href="/front/style.css">
+</head>
+<body>
+    <div id="login-container">
+        <div>
+            <p>Enter your code :</p>
+            <input id="code-input" type="password" autocomplete="off" maxLength="7">
+            <p>Hide password : <input type="checkbox" checked="true" onchange="document.querySelector('#code-input').type = document.querySelector('#code-input').parentElement.querySelectorAll('input')[1].checked ? 'password' : 'text'"> </p>
+        </div>
+    </div>
+    <div id="state-display" style="display: none;">
+        <div>
+            <p></p>
+        </div>
+    </div>
+    <div id="control-panel" style="display: none;">
+        <div id="buttons-container"></div>
+    </div>
+    <div id="freeze-box" style="display: none;"></div>
+    <script src="/front/js/usefull-func.js"></script>
+    <script src="/front/js/main.js"></script>
+    <script src="/front/js/action-buttons.js"></script>
+</body>
+</html>

@@ -1,0 +1,1012 @@
+Global Character cPlayer1;
+Global Character cPlayer2;
+
+@import #msgAPI;
+
+WorldLevel wlCity("Lego_City");
+
+Bool serverFreezePlayer( false );
+Bool canEnterInVehicle( true );
+Bool isInterfaceEnabled( true );
+Bool isWeaponsDisabled( false );
+Bool editedS(false);
+
+Bool isPlayingEmote( false );
+Bool isTakingDamage( false );
+Bool canContinueUsingEmote( true );
+
+Bool isSpinAttacking(false);
+Bool canSpinAgain(true);
+
+Number hudTimerMode(0);
+
+CityArray spawnedProjectiles(CityArray_Create("Vehicle"));
+
+Function stopEmotePlaying () {
+    // if(isPlayingEmote && canContinueUsingEmote) {
+    if(isPlayingEmote) {
+        canContinueUsingEmote = false;
+    }
+};
+
+Function kFirstPlyr () {
+
+    if(isPlayingEmote) {
+        stopEmotePlaying();
+        wait(0.2);
+        While (isPlayingEmote) {
+            wait(0.1);
+        };
+    }
+    
+    Number maxTimeToK(4);
+    While (maxTimeToK > 0 && (SafeToInterruptGameplay() == false || cPlayer1.InContext("DeathContext"))) {
+        wait(0.5);
+        maxTimeToK = maxTimeToK - 0.5;
+    };
+    if(maxTimeToK > 0) {
+        Vehicle plyrVehicle(cPlayer1.GetVehicle());
+        if(plyrVehicle) {
+            cPlayer1.ClearVehicle();
+            wait(0.1);
+            plyrVehicle.Destroy();
+        }
+        cPlayer1.Kill();
+    }
+};
+
+Function resetPlayerItems () {
+    
+    Text currentPlyrClass("COP"); // bad, using abilities;
+    Text otherPlyrClass("ROBBER");
+
+    if(cPlayer1.HasClassAbilities("Cop")) {
+        // change nothing
+    }
+    elseif(cPlayer1.HasClassAbilities("Robber")) {
+        otherPlyrClass = "COP";
+        currentPlyrClass = "ROBBER";
+    }
+    elseif(cPlayer1.HasClassAbilities("farmer")) {
+        currentPlyrClass = "farmer";
+    }
+    elseif(cPlayer1.HasClassAbilities("astronaut")) {
+        currentPlyrClass = "astronaut";
+    }
+    elseif(cPlayer1.HasClassAbilities("miner")) {
+        currentPlyrClass = "miner";
+    }
+    elseif(cPlayer1.HasClassAbilities("Fireman")) {
+        currentPlyrClass = "Fireman";
+    }
+    elseif(cPlayer1.HasClassAbilities("Construction")) {
+        currentPlyrClass = "Construction";
+    }
+    else {
+        currentPlyrClass = "Generic";
+    }
+    
+    PlayerSetCharacter(1, otherPlyrClass);
+    // wait(1);
+    PlayerSetCharacter(1, currentPlyrClass);
+};
+
+
+Function playEmote (Text emoteId, Number emoteTime, Number isEPlayerLocked) {
+    
+    if(isPlayingEmote == false && serverFreezePlayer == false && isTakingDamage == false && isSpinAttacking == false) {
+            
+        isPlayingEmote = true;
+        
+        Number timeToWait(0);
+
+        cPlayer1.SetAiOverride(true);
+        
+        if(isEPlayerLocked == 1) {
+            cPlayer1.LockInPlace(true, "idle");
+            timeToWait = cPlayer1.PlayContextAnimation(emoteId, emoteTime);
+            wait(timeToWait);
+        } else {
+
+            if(emoteTime == 1) {
+                cPlayer1.LockInPlace(true);
+                timeToWait = cPlayer1.PlayContextAnimation(emoteId, emoteTime);
+                wait(timeToWait);
+            } else {
+
+                cPlayer1.LockInPlace(true, emoteId);
+                // While (!PlayerPressedButton("UP")) {
+
+                // };
+
+                wait(0.1);
+                
+                While ((!PlayerHeldButton("LANG_UP")) && (!PlayerHeldButton("LANG_DOWN")) && (!PlayerHeldButton("A")) && canContinueUsingEmote) {
+                    wait(0.05);
+                };
+
+            }
+        }
+        
+        if(serverFreezePlayer == false) {
+            While (cPlayer1.InContext("DeathContext")) {
+                wait(0.1);
+            };
+            if(serverFreezePlayer == false) {
+                cPlayer1.SetAiOverride(false);
+                cPlayer1.LockInPlace(false);
+            }
+        }
+
+        // if(emoteId == "rockingchair_idle" || emoteId == "cafe_drink") {
+        if(emoteId == "rockingchair_idle") {
+            resetPlayerItems();
+        }
+        
+        isPlayingEmote = false;
+        canContinueUsingEmote = true;
+
+        // cPlayer1.ClearContext();
+        wait(0.1);
+        // ResetContext(Character=cPlayer1);
+
+    }
+};
+
+
+
+Function onJSMessage (CityArray textArgs, CityArray numberArgs) {
+    
+    // The first argument :
+    Text actionType( textArgs.Get(0) );
+
+    Global CityArray onlineChars;
+    
+    Global CityArray onlineDisguiseNames;
+    Global CityArray onlineDisguiseClasses;
+
+    if(actionType == "MPLYR") {
+
+        Number plyrId(numberArgs.Get(0));
+        Number isShowOnM(numberArgs.Get(1));
+        
+        Global CityArray visibleInMapPlyrs;
+
+        // if(plyrId > 0) {
+        //     // While (visibleInMapPlyrs.Size() < onlineChars.Size()) {
+        //     // While (visibleInMapPlyrs.Size() < plyrId + 1) {
+        //     //     visibleInMapPlyrs.Add(0);
+        //     // };
+        // }
+
+        Number indexC(0);
+
+        While(indexC < onlineChars.Size()) {
+
+            if(plyrId == -1 || plyrId == indexC) {
+                
+                Character charToEdit(onlineChars.Get(indexC));
+
+                if(charToEdit) {
+
+                    if(visibleInMapPlyrs.Get(indexC) == 0) {
+
+                        if(isShowOnM == 1) {
+                            // SetObjectiveMarker(charToEdit, 0.1, true, true);
+                            charToEdit.UI_Map_SetCharacterActive(true);
+                        }
+
+                    } else {
+                        
+                        if(isShowOnM == 0) {
+                            // SetObjectiveMarker(charToEdit, 0.1, false, false);
+                            charToEdit.UI_Map_SetCharacterActive(false);
+                        }
+                    }
+                }
+
+                visibleInMapPlyrs.Set(indexC, isShowOnM);
+            }
+
+            indexC = indexC + 1;
+        }
+        
+    }
+    
+    if(actionType == "FREEZE") {
+
+        Number isFreeze(numberArgs.Get(0));
+        
+        if(isFreeze == 1) {
+            serverFreezePlayer = true;
+            cPlayer1.SetAiOverride(true);
+            cPlayer1.LockInPlace(true);
+            
+            Text lockAnimName( textArgs.Get(1) );
+            cPlayer1.PlayContextAnimation(lockAnimName, -1);
+            
+            // If was using an UI-game interface hide it because when cPlayer1.SetAiOverride(true) the player cannot close the UI
+            UI_Map_Hide();
+        } else {
+            serverFreezePlayer = false;
+            cPlayer1.SetAiOverride(false);
+            cPlayer1.LockInPlace(false);
+
+            if(!cPlayer1.GetVehicle()) {
+                resetPlayerItems();
+            }
+            
+        }
+    }
+
+    if(actionType == "SPECIALACTION") {
+        
+        if(cPlayer1 && canContinueUsingEmote) {
+
+            if(canSpinAgain && isTakingDamage == false && isPlayingEmote == false && serverFreezePlayer == false) {
+
+                // SPIIIIIIIIIIIN
+                if(!cPlayer1.GetVehicle()) {
+                    
+                    canSpinAgain = false;
+                    isSpinAttacking = true;
+
+                    cPlayer1.ClearContext();
+                    wait(0.05);
+                    // ManageItem(Character=#Player1, ItemType="GrappleGun", #Remove, #AnimModeSnap, #NoSound);
+                    // ManageItem(Character=#Player1, ItemType="PaintBallGun", #Remove, #AnimModeSnap, #NoSound);
+                    // ManageItem(Character=#Player1, ItemType="RayGun", #Remove, #AnimModeSnap, #NoSound);
+
+                    Number attackAnimTime(0.7);
+                    cPlayer1.SetAiOverride(true);
+                    cPlayer1.LockInPlace(true, "Attack5");
+
+                    //attackAnimTime = cPlayer1.PlayContextAnimation("Attack5", 1);
+                    //wait(attackAnimTime - 0.3);
+                    wait(attackAnimTime);
+
+                    if(serverFreezePlayer == false) {
+                        
+                        if(isTakingDamage == false) {
+                            cPlayer1.ClearContext();
+                            // ResetContext(Character=cPlayer1);
+                            
+                            cPlayer1.LockInPlace(false, "idle");
+                            cPlayer1.SetAiOverride(false);
+                        }
+
+                    }
+                    isSpinAttacking = false;
+
+                    wait(1.5);
+                    canSpinAgain = true;
+
+                }
+            }
+
+        }
+    }
+
+    
+    if(actionType == "TP") {
+
+        Number newRotPlyr(cPlayer1.GetDirection());
+        
+        if(numberArgs.Size() > 3) {
+            newRotPlyr = numberArgs.Get(3);
+            newRotPlyr = (newRotPlyr / 360) * 65535;
+        }
+
+        Number xTPPos(numberArgs.Get(0));
+        Number yTPPos(numberArgs.Get(1));
+        Number zTPPos(numberArgs.Get(2));
+
+        if(cPlayer1.GetVehicle()) {
+            
+            Position newPlyrVPos(xTPPos, yTPPos + 0.1, zTPPos);
+
+            Vehicle plyrV(cPlayer1.GetVehicle());
+            plyrV.Teleport(newPlyrVPos, newRotPlyr);
+        
+        } elseif(cPlayer1.GetRidden()) {
+            
+            Position newPlyrCPos(xTPPos, yTPPos, zTPPos);
+
+            Character plyrVChar(cPlayer1.GetRidden());
+            plyrVChar.Teleport(newPlyrCPos, newRotPlyr);
+
+        } else {
+            Position newPlyrPos(xTPPos, yTPPos, zTPPos);
+            cPlayer1.Teleport(newPlyrPos, newRotPlyr);
+        }
+        
+    }
+
+
+    if(actionType == "DAMAGE") {
+        
+        Number damagesAdded(numberArgs.Get(0));
+        Number actualHP(cPlayer1.GetHealth());
+        
+        if(cPlayer1.GetVehicle()) {
+            Vehicle plyrVToAtt(cPlayer1.GetVehicle());
+            
+            if(plyrVToAtt.GetDriver()) {
+                actualHP = plyrVToAtt.GetHealth(#Current);
+                actualHP = actualHP - damagesAdded;
+
+                if(actualHP < 1) {
+                    plyrVToAtt.Destroy();
+                } else {
+                    plyrVToAtt.SetHealth(#Set, actualHP);
+                }
+            }
+
+            return;
+        }
+
+
+        if(actualHP > 0 && (!cPlayer1.InContext("DeathContext")) && isTakingDamage == false) {
+
+            actualHP = actualHP - damagesAdded;
+
+            if(actualHP < 1) {
+                
+                kFirstPlyr();
+                //cPlayer1.Kill();
+
+            } else {
+                
+                // cPlayer1.SetHealth(#Minus, 1);
+                cPlayer1.SetHealth(#Set, actualHP);
+                
+                if(!cPlayer1.GetRidden()) {
+                    
+                    if(!cPlayer1.GetVehicle()) {
+
+                        Text animIdT("Knockback_2");
+                        //animIdT = "Knockback_" + randomAnimI;
+                        
+                        // if(actualHP == 3) {
+                        // animIdT = "Knockback_3";
+                        // bruh it crash the game
+                        // }
+                        if(actualHP == 2) {
+                            animIdT = "Knockback_2";
+                        }
+                        if(actualHP == 1) {
+                            animIdT = "Knockback_1";
+                        }
+                        
+                        if(serverFreezePlayer == false && isTakingDamage == false && isPlayingEmote == false) {
+
+
+                            isTakingDamage = true;
+                            Number timeForK(1);
+
+                            if(isSpinAttacking) {
+                                cPlayer1.SetAiOverride(false);
+                            } else {
+                                cPlayer1.LockInPlace(true);
+                            }
+                            // cPlayer1.SetAiOverride(true);
+                            
+                            timeForK = cPlayer1.PlayContextAnimation(animIdT, 1);
+                            
+                            wait(timeForK);
+                            isTakingDamage = false;
+                            if(serverFreezePlayer == false) {
+                                cPlayer1.LockInPlace(false);
+                                // cPlayer1.SetAiOverride(false);
+                            }
+                        }
+
+                    }
+
+                }
+            }
+        }
+        
+    }
+
+    
+    if(actionType == "KILL") {
+
+        Number playerIdN(numberArgs.Get(0));
+        
+        if(playerIdN == -1) {
+            
+            kFirstPlyr();
+            //cPlayer1.Kill();
+
+        } else {
+        
+            if(playerIdN == -2) {
+                
+                Vehicle plyrVeh( cPlayer1.GetVehicle() );
+                
+                if(plyrVeh) {
+                    plyrVeh.Destroy();
+                }
+
+            } else {
+                
+                Character charToK(onlineChars.Get(playerIdN));
+
+                if(charToK) {
+
+                    if(!charToK.GetVehicle()) {
+                        charToK.Kill();
+                    }
+                }
+            }
+            
+        }
+    }
+    
+    if(actionType == "SETCANBEINV") {
+        Number canEnterVNow(numberArgs.Get(0));
+        
+        if(canEnterVNow == 1) {
+            canEnterInVehicle = true;
+        } else {
+            canEnterInVehicle = false;
+        }
+    }
+    
+
+    if(actionType == "SETV") {
+
+        Position plyrPos(cPlayer1.GetPosition());
+        Number plyrDir(cPlayer1.GetDirection());
+
+        if(cPlayer1.GetVehicle()) {
+            Vehicle oldPlyrV(cPlayer1.GetVehicle());
+            if(oldPlyrV.GetDriver()) { // If isn't an online player vehicle;
+                cPlayer1.ClearVehicle();
+                wait(0.05);
+                if(oldPlyrV) {
+                    oldPlyrV.Destroy();
+                }
+            } else {
+                cPlayer1.ClearVehicle();
+            }
+        }
+        
+        if(cPlayer1.GetRidden()) {
+            Character riddenChar( cPlayer1.GetRidden() );
+            ManageTakeOver(Character=cPlayer1, #ReleaseRight, #Instant);
+            wait(0.05);
+            riddenChar.Kill();
+        }
+        
+        Text vehicleName( textArgs.Get(1) );
+
+        if(vehicleName != "NO") {
+
+            canEnterInVehicle = true;
+            
+
+            if(serverFreezePlayer || isPlayingEmote) {
+                if(isPlayingEmote) {
+                    stopEmotePlaying();
+                    While (isPlayingEmote) {
+                        wait(0.1);
+                    };
+                    wait(0.1);
+                } else {
+                    cPlayer1.PlayContextAnimation("idle", -1);
+                    wait(0.1);
+                    resetPlayerItems();
+                }
+                wait(0.2);
+            }
+
+            // if(isPlayingEmote) {
+            //     stopEmotePlaying();
+            //     wait(0.3);
+            // }
+
+            Number isInvu(numberArgs.Get(0));
+            Number isLocked(numberArgs.Get(1));
+            Text vehicleClass( textArgs.Get(2) );
+
+            if(vehicleClass == "RideableCreature") {
+                Character charV;
+                
+                Position vehicleFPosC(plyrPos.GetX(), plyrPos.GetY() + 1.2, plyrPos.GetZ());
+
+                charV = CreateAiCharacter(vehicleName, vehicleClass, vehicleFPosC, plyrDir);
+                wait(0.18);
+
+                // If the vehicle exist (because vehicleName can not exist)
+                if(charV) {
+                    //charV.SetPushable(false);
+                    SetCharacterFlags(Character=charV, #DontPush);
+                    if(isInvu == 1) {
+                        charV.SetInvulnerable(true);
+                    }
+                    
+                    if(isLocked == 1) {
+                        ManageTakeover(Character=cPlayer1, TakeOver=charV, #Instant, #LockedIn);
+                    } else {
+                        ManageTakeover(Character=cPlayer1, TakeOver=charV, #Instant);
+                    }
+                }
+
+            } else {
+                Vehicle newPVehicle;
+
+                Position vehicleFPosV(plyrPos.GetX(), plyrPos.GetY() + 0.1, plyrPos.GetZ());
+
+                newPVehicle = CreateAiVehicle(vehicleName, vehicleClass, vehicleFPosV, plyrDir);
+
+                wait(0.18);
+
+                // If the vehicle exist (because vehicleName can not exist)
+                if(newPVehicle) {
+                    
+                    cPlayer1.SetVehicle(newPVehicle, #DRIVER);
+                    if(isInvu == 1) {
+                        newPVehicle.SetInvulnerable(true);
+                    }
+                    
+                    Number waitedTimeToEnter(0);
+                    // Limit of time for this loop: 2.5 seconds
+                    While (newPVehicle && cPlayer1.GetVehicle() != newPVehicle && waitedTimeToEnter < 25) {
+                        waitedTimeToEnter = waitedTimeToEnter + 1;
+                        wait(0.1);
+                        if(waitedTimeToEnter == 5 || waitedTimeToEnter == 10 || waitedTimeToEnter == 15 || waitedTimeToEnter == 20) {
+                            cPlayer1.SetVehicle(newPVehicle, #DRIVER);
+                        }
+                    };
+                    if(isLocked == 1) {
+                        newPVehicle.SetSeatLocked(#Driver, true);
+                    }
+                }
+            }
+        }
+
+    }
+    
+    
+    if(actionType == "TXT") {
+
+        Text txtToShow( textArgs.Get(1) );
+        
+        Number modeToUseT(numberArgs.Get(0));
+        Number timeToShowT(numberArgs.Get(1));
+
+        if(modeToUseT == 1) {
+            UI_SetMissionMessage(txtToShow, timeToShowT + 1 );
+            PlaySFX(sfx="UI_CodeBreak_CheatUnlocked");
+        } else {
+            UI_ShowObjectiveScreen( true, txtToShow, timeToShowT, false );
+        }
+    }
+    
+    
+    if(actionType == "SOUND") {
+
+        Text soundTxtId( textArgs.Get(1) );
+
+        Number charTargetId(numberArgs.Get(0));
+        
+        if(charTargetId == -1) {
+            PlaySFX(sfx=soundTxtId);
+        } else {
+            Character charSound( onlineChars.Get(charTargetId) );
+            if(charSound) {
+                PlaySFX(sfx=soundTxtId, TargetCharacter=charSound);
+            } else {
+                //PlaySFX(sfx=soundTxtId);
+            }
+        }
+    }
+    
+    if(actionType == "HP") {
+
+        Number newPlyrHP(numberArgs.Get(0));
+        
+        if(cPlayer1 && (!cPlayer1.InContext("DeathContext"))) {
+
+            if(numberArgs.Size() > 1) {
+                if(cPlayer1.GetVehicle()) {
+                    Vehicle plyrVSetHP(cPlayer1.GetVehicle());
+                    plyrVSetHP.SetHealth(#Set, newPlyrHP);
+                }
+
+            } else {
+                
+                cPlayer1.SetHealth(#Set, newPlyrHP);
+            }
+        }
+    }
+    
+    if(actionType == "JOINEDSERVER") {
+        Global Bool isCDisabled;
+        isCDisabled = true;
+        Global Bool isInAServer;
+        isInAServer = true;
+    }
+    
+    if(actionType == "SETISCENABLED") {
+        Number numberiscenabled(numberArgs.Get(0));
+        Global Bool isCDisabled;
+        if(numberiscenabled != 1) {
+            isCDisabled = true;
+        }
+    }
+
+    // When the client is disconnected, remove old server actions
+    if(actionType == "DISCONNECTED") {
+        if(serverFreezePlayer) {
+            serverFreezePlayer = false;
+            cPlayer1.SetAiOverride(false);
+            cPlayer1.LockInPlace(false);
+        }
+
+        canEnterInVehicle = true;
+        
+        SetSatNavDestination();
+        SetObjectiveMarker(cPlayer1, 0, false, false);
+        ShowObjectiveMarker(false);
+        //SetObjectiveMarker();
+        
+        if(editedS) {
+            editedS = false;
+            Position plyrPos(cPlayer1.GetPosition());
+            Position newCharPos(plyrPos.GetX(), plyrPos.GetY() + 8, plyrPos.GetZ());
+            Character nextChar(CreateAiCharacter("FrankHoney", "Special", newCharPos, 0));
+            nextChar.SetPushable(false);
+            wait(0.15);
+            if(nextChar) {
+                nextChar.FollowCharacter(cPlayer1, 0.5, 2);
+            }
+            wait(1);
+            if(nextChar) {
+                nextChar.Kill();
+            }
+        }
+        
+        Global Bool isInAServer;
+        isInAServer = false;
+        Global Bool isCDisabled;
+        isCDisabled = false;
+        
+        // Global CityArray onlineChars;
+        Global CityArray onlineVehicles;
+        Global CityArray visibleInMapPlyrs;
+
+        Number indexRemovLoop(0);
+
+        While(indexRemovLoop < onlineChars.Size()) {
+
+            Character charToRemove(onlineChars.Get(indexRemovLoop));
+
+            if(charToRemove) {
+                charToRemove.Kill();
+            }
+
+            indexRemovLoop = indexRemovLoop + 1;
+        }
+        indexRemovLoop = 0;
+        While(indexRemovLoop < onlineVehicles.Size()) {
+
+            Vehicle vehicleToRemove(onlineVehicles.Get(indexRemovLoop));
+
+            if(vehicleToRemove) {
+                vehicleToRemove.Destroy();
+            }
+
+            indexRemovLoop = indexRemovLoop + 1;
+        }
+        indexRemovLoop = 0;
+        While(indexRemovLoop < visibleInMapPlyrs.Size()) {
+
+            visibleInMapPlyrs.Set(indexRemovLoop, 0);
+
+            indexRemovLoop = indexRemovLoop + 1;
+        }
+        indexRemovLoop = 0;
+        While(indexRemovLoop < onlineDisguiseNames.Size()) {
+
+            onlineDisguiseNames.Set(indexRemovLoop, "FrankHoney");
+            onlineDisguiseClasses.Set(indexRemovLoop, "Special");
+
+            indexRemovLoop = indexRemovLoop + 1;
+        }
+        indexRemovLoop = 0;
+    }
+
+    if(actionType == "SETONLINED") {
+
+        Number nPlyrId( numberArgs.Get(0) );
+
+        Text newCharName( textArgs.Get(1) );
+        Text newCharClass( textArgs.Get(2) );
+
+        onlineDisguiseNames.Set(nPlyrId, newCharName);
+        onlineDisguiseClasses.Set(nPlyrId, newCharClass);
+
+        Character oldChar( onlineChars.Get(nPlyrId) );
+
+        Position oldOnlineCharPos(0, 60, 0);
+        Number newCharDir(0);
+
+        if(oldChar) {
+            oldOnlineCharPos = oldChar.GetPosition();
+            newCharDir = oldChar.GetDirection();
+        }
+
+        
+        Global CityArray visibleInMapPlyrs;
+
+        Character cNewPlyr;
+        cNewPlyr = CreateAiCharacter(newCharName, newCharClass, oldOnlineCharPos, newCharDir);
+        wait(0.1);
+        if(!cNewPlyr) {
+            wait(0.2);
+        }
+        if(cNewPlyr) {
+            
+            cNewPlyr.SetInvulnerable(true);
+            cNewPlyr.SetAiOverride(true);
+            cNewPlyr.LockInPlace(true);
+            SetCharacterFlags(Character=cNewPlyr, #DontPush, #NoTerrain, #IgnoreGravity);
+
+            onlineChars.Set(nPlyrId, cNewPlyr);
+
+            if(oldChar) {
+                oldChar.Kill();
+            }
+
+            if(visibleInMapPlyrs.Get(nPlyrId) == 1) {
+                cNewPlyr.UI_Map_SetCharacterActive(true);
+            }
+        }
+    }
+
+    
+    if(actionType == "ANIM") {
+        Text newAnimName( textArgs.Get(1) );
+        
+        Number newEmoteTime(numberArgs.Get(0));
+        Number emotePlyrLocked(numberArgs.Get(1));
+        
+        if((!cPlayer1.InContext("DeathContext")) && SafeToInterruptGameplay() && (!cPlayer1.GetVehicle()) && (!cPlayer1.InContext("Swimming"))) {
+            if(!isPlayingEmote) {
+                playEmote(newAnimName, newEmoteTime, emotePlyrLocked);
+            }
+        }
+        
+    }
+    
+    if(actionType == "SPAWNCOINS") {
+        Number numberOfCoins(numberArgs.Get(0));
+
+        if(numberArgs.Size() > 1) {
+
+            Number coinsPosX(numberArgs.Get(1));
+            Number coinsPosY(numberArgs.Get(2));
+            Number coinsPosZ(numberArgs.Get(3));
+
+            Position coinsPos(coinsPosX, coinsPosY, coinsPosZ);
+
+            SpawnStuds(coinsPos, numberOfCoins, 1);
+        } else {
+            SpawnStuds(cPlayer1.GetPosition(), numberOfCoins, 1);
+        }
+        
+    }
+
+    if(actionType == "SPAWNPROJECTILE") {
+
+        Number projectileId(numberArgs.Get(0));
+        
+        Number xPosProj(numberArgs.Get(1));
+        Number yPosProj(numberArgs.Get(2));
+        Number zPosProj(numberArgs.Get(3));
+
+        if(projectileId == 1) {
+
+            Position projectilePos(xPosProj, yPosProj, zPosProj);
+
+            if(cPlayer1.DistanceToXZ(projectilePos) < 50) {
+
+                if(spawnedProjectiles.Size() > 30) {
+                    Vehicle oldProjectileToRemove(spawnedProjectiles.Get(0));
+                    if(oldProjectileToRemove) {
+                        oldProjectileToRemove.Destroy();
+                    }
+                    spawnedProjectiles.Remove(0);
+                }
+
+                Number projectileRot(numberArgs.Get(4));
+
+                projectileRot = (projectileRot / 360) * 65535;
+
+                Vehicle vProjectile (CreateAiVehicle("FuelCarriage", "Trains", projectilePos, projectileRot));
+                vProjectile.SetScript("MOD_E_ACTIONS_D_CAR");
+
+                spawnedProjectiles.Add(vProjectile);
+            }
+            
+        } elseif(projectileId == 2) {
+
+            Position projectilePos(xPosProj, yPosProj, zPosProj);
+
+            if(cPlayer1.DistanceToXZ(projectilePos) < 35) {
+
+                Number projectileRot(numberArgs.Get(4));
+
+                projectileRot = (projectileRot / 360) * 65535;
+
+                Vehicle vProjectile (CreateAiVehicle("FuelCarriage", "Trains", projectilePos, projectileRot));
+                vProjectile.SetScript("MOD_E_ACTIONS_AUTO_D_CAR");
+
+            }
+            
+        }
+    }
+    
+    if(actionType == "SETGOAL") {
+
+        if(numberArgs.Size() > 2) {
+
+            Number goalPosX(numberArgs.Get(0));
+            Number goalPosY(numberArgs.Get(1));
+            Number goalPosZ(numberArgs.Get(2));
+
+            Position goalPos(goalPosX, goalPosY, goalPosZ);
+            
+            SetSatNavDestination(goalPos);
+            SetObjectiveMarker(goalPos, 0.5, true, true);
+            ShowObjectiveMarker(true);
+            
+        } else {
+            
+            // IF NO NUMBER ARGUMENTS, REMOVE THE OBJECTIVE
+            if(numberArgs.Size() < 1) {
+                
+                SetSatNavDestination();
+                SetObjectiveMarker(cPlayer1, 0, false, false);
+                ShowObjectiveMarker(false);
+            }
+
+            // SetSatNavDestination(goalPos);
+            // SetObjectiveMarker(goalPos, 0.25, false, true);
+
+        }
+        
+    }
+    
+    if(actionType == "TOOGLEUI") {
+        isInterfaceEnabled = isInterfaceEnabled == false;
+        wait(0.8);
+        if(isInterfaceEnabled) {
+            UI_ShowHUD(true);
+            UI_ShowPlayerHUD(true);
+        } else {
+            UI_ShowHUD(false);
+            UI_ShowPlayerHUD(false);
+        }
+
+    }
+    
+    if(actionType == "TRAFFIC") {
+        
+        Number newTrafficD(numberArgs.Get(0));
+
+        if(numberArgs.Size() > 1) {
+            editedS = true;
+            Position plyrPos(cPlayer1.GetPosition());
+            Position newCharPos(plyrPos.GetX(), plyrPos.GetY() + 8, plyrPos.GetZ());
+            Character nextChar(CreateAiCharacter("FrankHoney", "Special", newCharPos, 0));
+            nextChar.SetPushable(false);
+            wait(0.15);
+            if(nextChar) {
+                nextChar.FollowCharacter(cPlayer1, 0.5, newTrafficD);
+            }
+            wait(1);
+            if(nextChar) {
+                nextChar.Kill();
+            }
+        } else {
+
+            OverrideTrafficDensity(newTrafficD);
+            // KillSpawnedTraffic();
+        }
+
+    }
+
+    if(actionType == "TIMERMODE") {
+        
+        Number newTimerMode(numberArgs.Get(0));
+        
+        if(newTimerMode != hudTimerMode) {
+            
+            if (newTimerMode != 0) {
+                UI_ShowHUDTimer(true);
+            } else {
+                UI_ShowHUDTimer(false);
+                UI_StopHUDTimer();
+            };
+        }
+        
+        hudTimerMode = newTimerMode;
+
+    }
+    
+    if(actionType == "TOOGLEWEAPONS") {
+        
+        if(!cPlayer1.GetVehicle() && isPlayingEmote == false) {
+        
+            // if(IsAbilityUnlocked( #GrappleGun ))
+
+            isWeaponsDisabled = isWeaponsDisabled == false;
+            
+            if( isWeaponsDisabled ) {
+
+                LockAbility("EnergyGun");
+                LockAbility("grapplegun");
+                
+                ManageItem(Character=#Player1, ItemType="GrappleGun", #Remove, #AnimModeSnap, #NoSound);
+                ManageItem(Character=#Player1, ItemType="PaintBallGun", #Remove, #AnimModeSnap, #NoSound);
+                // ManageItem(Character=#Player1, ItemType="RayGun", #Remove, #AnimModeSnap, #NoSound);
+            
+            } else {
+
+                
+                UnlockAbility("grapplegun");
+                UnlockAbility("EnergyGun");
+                
+                if(cPlayer1.HasClassAbilities("Cop")) {
+                    
+                    ManageItem(Character=#Player1, ItemType="GrappleGun", #Create, #MakeDefault);
+                
+                } else {
+
+                    if(cPlayer1.HasClassAbilities("robber")) {
+                        ManageItem(Character=#Player1, ItemType="PaintBallGun", #Create, #MakeDefault);
+                    }
+                    
+                }
+                
+            }
+        }
+    }
+
+}
+
+State Base() {
+    Conditions
+    {
+        @ifMessage "ONLINE_E_ACTIONS" onJSMessage #oneThreadOnlyFor="ANIM","KILL","DAMAGE","SPECIALACTION";
+        
+        if(canEnterInVehicle == false && cPlayer1.GetVehicle()) {
+            cPlayer1.ClearVehicle();
+        }
+
+        if(hudTimerMode != 0) {
+            if(hudTimerMode == 1) {
+                Vehicle plyrV(cPlayer1.GetVehicle());
+                if(plyrV) {
+                    Number vehicleSpeed(plyrV.GetSpeed());
+                    UI_SetHUDTimer( vehicleSpeed, 0);
+                    UI_Timer_SetLoudTick(true, 0);
+                }
+            }
+        }
+    };
+    Actions
+    {
+        While( wlCity.IsLoaded() == false || SafeToInterruptGameplay() == false ) {
+            wait(1);
+        };
+
+        // wait(5);
+    };
+};
+
+Base();

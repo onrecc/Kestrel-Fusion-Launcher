@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom Booster</title>
+    <style>
+        body {
+            text-align: center;
+        }
+
+        * {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+            font-size: 20px;
+        }
+
+        #shortcut-box {
+            width: max-content;
+            position: absolute;
+            left: calc(50% + 110px);
+            top: 40px;
+            z-index: 9999;
+        }
+
+        #presets-container {
+            display: inline-flex;
+            gap: 15px;
+        }
+        
+        #presets-container > button {
+            font-size: 20px;
+            width: 35px;
+            height: 35px;
+            border: 1px solid black;
+            background: #efefef;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        button.selected-preset {
+            border: 3px solid #8b8b8b;
+            scale: 1.25;
+            background: white;
+            cursor: auto;
+        }
+
+        #stat-editor {
+            margin-top: 25px;
+            display: inline-flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: start;
+            padding: 0px 35px;
+        }
+
+        #stat-editor > div > input {
+            width: 50px;
+            padding: 5px;
+        }
+
+        #editor-blocker {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0px;
+            left: 0px;
+            background: #d7d7d775;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #tools-shortcuts-menu {
+            width: 80%;
+            height: 80%;
+            position: absolute;
+            top: 10%;
+            left: 10%;
+            background: white;
+            border-radius: 10px;
+            border: black solid 1px;
+            z-index: 10000;
+        }
+    </style>
+</head>
+<body>
+    <div id="editor-blocker" style="
+        display: none;
+    ">
+        <p style="
+            font-size: 25px;
+            background: white;
+            border-radius: 14px;
+            padding: 15px;
+        ">In a server this is the server that choose the custom-booster stats.</p>
+    </div>
+
+    <button id="power-button" style="
+        margin-top: 20px;
+
+        width: 145px;
+        height: 125px;
+        padding: 12px 20px;
+        text-align: center;
+        background: white;
+        border: 1px #c5c5c5 solid;
+        border-radius: 14px;
+        cursor: pointer;
+
+        box-shadow: 0px 1px 5px #393939a3;
+    ">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+        </svg>
+        
+        <label style="
+            transform: translate(0px, 15px);
+            display: block;
+            font-size: 16px;
+        "></label>
+
+    </button>
+    
+    <div id="shortcut-box">
+        <label></label>
+        <button style="
+            margin: 5px;
+            cursor: pointer;
+        "
+        onclick=" electronAPI.editShortcut(); "
+        >EDIT</button>
+    </div>
+    
+    <div style="
+        width: max-content;
+        position: absolute;
+        left: calc(50% + 110px);
+        top: 90px;
+        z-index: 9999;
+    ">
+        <label>Audio:</label>  <input id="audio-level-input" type="range" min="0" max="1" step="0.05">
+    </div>
+
+    
+    <button style="
+        margin: 5px;
+        cursor: pointer;
+        position: absolute;
+        left: calc(50% - 275px);
+        top: 40px;
+    "
+        onclick=" openToolsShortcutsMenu(); "
+    >Other Shortcuts</button>
+
+    <p style="
+        font-size: 27px;
+        margin-top: 80px;
+    ">Stats</p>
+    <div id="presets-container">
+        <button preset-b-id="1" onclick=" loadPreset(1); ">1</button>
+        <button preset-b-id="2" onclick=" loadPreset(2); ">2</button>
+        <button preset-b-id="3" onclick=" loadPreset(3); ">3</button>
+        <button preset-b-id="4" onclick=" loadPreset(4); ">4</button>
+    </div>
+
+    <p></p>
+
+    <div id="stat-editor">
+
+        <div class="stat-input">
+            <label>Power :</label> <input id="input-power" type="number" step="0.1">
+        </div>
+        
+        <div class="stat-input">
+            <label>Reload Time : </label> <input id="input-rltime" type="number"> seconds
+        </div>
+        
+        <div class="stat-input">
+            <label>Boosts by reloads : </label> <input id="input-boostsbyreloads" type="number">
+        </div>
+        
+        <div class="stat-input">
+            <label>Mode :</label>
+            <select id="input-mode" style="
+                padding: 5px;
+            ">
+                <option value="CLASSIC">Classic</option>
+                <option value="MULTIPLIER">Multiplier</option>
+                <option value="CLASSIC_WITHOUT_Y">Classic NO Y</option>
+                <option value="MULTIPLIER_WITHOUT_Y">Multiplier NO Y</option>
+            </select>
+        </div>
+
+        <!-- <div class="stat-input">
+            <label>Drift power : TODO MAKE SHORTCUT FOR TOOGLE</label>
+            <select id="input-driftpower" style="
+                padding: 5px;
+            ">
+                <option value="NORMAL">NORMAL</option>
+                <option value="HIGHGRIP">HIGH GRIP</option>
+                <option value="DRIFT">DRIFT</option>
+            </select>
+        </div> -->
+
+    </div>
+
+    <script>
+        const powerButton = document.querySelector("#power-button");
+
+        powerButton.onclick = () => {
+            electronAPI.tooglePower();
+        };
+
+        function loadPreset(presetId) {
+            electronAPI.loadPreset(presetId);
+        }
+
+        function editStat(statId, statVal) {
+            console.log('new val:', statId, statVal);
+            electronAPI.editStat(statId, statVal);
+        }
+        
+        const statInputs = {
+            power: document.querySelector('#input-power'),
+            rlTime: document.querySelector('#input-rltime'),
+            boostsByReloads: document.querySelector("#input-boostsbyreloads"),
+            mode: document.querySelector('#input-mode'),
+        };
+
+        statInputs.power.onchange = () => {
+            let valToSend = Number(statInputs.power.value);
+            if(Number.isNaN(valToSend)) return;
+            editStat('power', valToSend);
+        };
+        
+        statInputs.rlTime.onchange = () => {
+            let valToSend = Number(statInputs.rlTime.value);
+            if(Number.isNaN(valToSend)) return;
+            editStat('rlTime', valToSend * 1000);
+        };
+
+        statInputs.boostsByReloads.onchange = () => {
+            let valToSend = parseInt(statInputs.boostsByReloads.value);
+            if(Number.isNaN(valToSend)) return;
+            if(valToSend < 1) {
+                valToSend = 1;
+                statInputs.boostsByReloads.value = '1';
+            }
+            editStat('boostsByReloads', valToSend);
+        };
+        
+        statInputs.mode.onchange = () => {
+            editStat('mode', statInputs.mode.value);
+        };
+
+        function openToolsShortcutsMenu() {
+            let otherShorctutsMenu = document.createElement('div');
+            otherShorctutsMenu.id = 'tools-shortcuts-menu';
+
+            otherShorctutsMenu.innerHTML = `
+                <button>X</button>
+                <p>Shortcuts:</p>
+                <button style="cursor: pointer;">Edit Base Shortcut</button>
+            `;
+
+            let closeMenuButton = otherShorctutsMenu.querySelector('button');
+            closeMenuButton.style = `
+                border: 1px solid black;
+                border: none;
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                cursor: pointer;
+                background: #eaeaea;
+                position: absolute;
+                left: calc(100% - 50px);
+                top: 11px;
+            `;
+            closeMenuButton.onclick = () => {
+                otherShorctutsMenu.remove();
+            };
+
+
+            let textElShortcuts = otherShorctutsMenu.querySelector('p');
+            
+            let baseOtherShortcuts = electronAPI.getOtherShortcutsBase()||'(No shortcut choosed)';
+            
+            textElShortcuts.innerText = (
+                '\nShortcuts:'+
+                '\nMake bigger the suspensions: "' + baseOtherShortcuts + '" and "W"'+
+                '\nMake smaller the suspensions: "' + baseOtherShortcuts + '" and "S"'+
+                '\nPrevent barrels: "' + baseOtherShortcuts + '" and "D"'+
+                '\nRotation Boost: "' + baseOtherShortcuts + '" and "' + baseOtherShortcuts + '"'
+            );
+
+            let buttonForEditShortcut = otherShorctutsMenu.querySelectorAll('button')[1];
+            buttonForEditShortcut.onclick = () => {
+                otherShorctutsMenu.remove();
+                electronAPI.editToolShortcut();
+            }
+            
+            document.body.appendChild(otherShorctutsMenu);
+        }
+
+    </script>
+</body>
+</html>

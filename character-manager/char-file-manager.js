@@ -45,6 +45,7 @@ function compileCustomCharObjectToModFiles(charobject, graphicDatas, resultfolde
         price: charobject.price,
         cheatcode: charobject.cheatcode,
         class: charobject.class,
+        otherClasses: charobject.otherClasses || [],
         addedToCustomer: charobject.addedToCustomer,
 
         attributes: []
@@ -56,6 +57,30 @@ function compileCustomCharObjectToModFiles(charobject, graphicDatas, resultfolde
         if(typeof(charobject.props[key]) == 'number' && (charobject.props[key] + '').includes('.') == false) charobject.props[key] = charobject.props[key] + '.0';
         modDatas.attributes.push(key + '=' + charobject.props[key]);
     }
+
+
+    if( charobject.hasChicken ) {
+        [
+            'QWRkT24gRmFybWVyQ2hpY2tlbkdsaWRlQWRkT24=',
+            'Z2xpZGVfYW55dGltZT0x',
+            'Z2xpZGVfZW5mb3JjZV9leGFjdHRpbWluZz0x',
+            'bm9faG9sZF9nbGlkZT0x',
+            'Z2xpZGVfbWF4dGltZT02LjQ=',
+            'Z2xpZGVfbWF4dGlyZWR0aW1lPTIuMA==',
+            'Z2xpZGVfZGVzY2VuZHNwZWVkPS0wLjgy',
+            'Z2xpZGVfZGVzY2VuZHRpcmVkc3BlZWQ9LTAuMA==',
+            'Z2xpZGVfcG93ZXJ1cF9leHRyYXRpbWU9NQ==',
+            'Z2xpZGVfcG93ZXJ1cF9zcGVlZD0xLjE5',
+            'Z2xpZGVfcG93ZXJ1cF9zcGVlZHRpbWU9Mi4y'
+        ].forEach(
+            t => {
+                modDatas.attributes.push(
+                    Buffer.from(t, 'base64').toString('utf8')
+                );
+            }
+        )
+    }
+
 
     const assetsFolderM = path.join(resultfolder, `/chars/${modDatas.id}/assets`);
 
@@ -91,7 +116,6 @@ function compileCustomCharObjectToModFiles(charobject, graphicDatas, resultfolde
 
     // Create char.json
     fs.writeFileSync(path.join(resultfolder, `/chars/${modDatas.id}/char.json`), JSON.stringify(modDatas), {encoding: 'utf8'});
-
 
     // Add the assets (textures, models..) :
 
@@ -458,26 +482,26 @@ function compileModFilesToGameFiles(charfolder, canshowinfo) {
         replaceExistingValue('FACE_STORY_DOORLOCKHOMES', `FACE_${charModInfo.id}_SKIMASK`);
         // replaceExistingValue('FACE_STORY_DOORLOCKHOMES', `FACE_${charModInfo.id}`);
 
-        // ATTENTION :
-        // SI LE HATID EST TROP GRAND CELA VA RENDRE LE .CD INUTILISABLE
-        
+        // if hatid is to long it can make the cd file not usable
 
         // Add the hat / the hairs :
         if(charModInfo.hairid && typeof(charModInfo.hairid) == 'string') {
+            if(!charModInfo.miniHat) charModInfo.miniHat = 'HAIR_' + charModInfo.hairid;
             // Set the hat 2 times :
             replaceExistingValue('Hats\\HAT_DEERSTALKER', 'Hairs\\HAIR_' + charModInfo.hairid);
-            replaceExistingValue('HAT_DEERSTALKER', 'HAIR_' + charModInfo.hairid);
+            replaceExistingValue('HAT_DEERSTALKER', charModInfo.miniHat);
             
             replaceExistingValue('Hats\\HAT_DEERSTALKER', 'Hairs\\HAIR_' + charModInfo.hairid);
-            replaceExistingValue('HAT_DEERSTALKER', 'HAIR_' + charModInfo.hairid);
+            replaceExistingValue('HAT_DEERSTALKER', charModInfo.miniHat);
         }
         else if(charModInfo.hatid && typeof(charModInfo.hatid) == 'string') {
+            if(!charModInfo.miniHat) charModInfo.miniHat = 'HAT_' + charModInfo.hatid;
             // Set the hat 2 times :
             replaceExistingValue('Hats\\HAT_DEERSTALKER', 'Hats\\HAT_' + charModInfo.hatid);
-            replaceExistingValue('HAT_DEERSTALKER', 'HAT_' + charModInfo.hatid);
+            replaceExistingValue('HAT_DEERSTALKER', charModInfo.miniHat);
             
             replaceExistingValue('Hats\\HAT_DEERSTALKER', 'Hats\\HAT_' + charModInfo.hatid);
-            replaceExistingValue('HAT_DEERSTALKER', 'HAT_' + charModInfo.hatid);
+            replaceExistingValue('HAT_DEERSTALKER', charModInfo.miniHat);
         }
         else if(fs.existsSync(path.join(charAssetsPath, 'HAT.GSC'))) {
             
@@ -493,6 +517,19 @@ function compileModFilesToGameFiles(charfolder, canshowinfo) {
             
             replaceExistingValue('Hats\\HAT_DEERSTALKER', 'Hats\\HAT_' + charModInfo.id);
             replaceExistingValue('HAT_DEERSTALKER', 'HAT_' + charModInfo.id);
+            
+            // // copy-paste the file
+            // fs.writeFileSync(
+            //     path.join(gameAssetsFolder, 'HATS/KF_' + charModInfo.id + '_DX11.GSC'),
+            //     fs.readFileSync(path.join(charAssetsPath, 'HAT.GSC'))
+            // );
+            
+            // // Set the hat 2 times :
+            // replaceExistingValue('Hats\\HAT_DEERSTALKER', 'Hats\\KF_' + charModInfo.id);
+            // replaceExistingValue('HAT_DEERSTALKER', 'KF_' + charModInfo.id);
+            
+            // replaceExistingValue('Hats\\HAT_DEERSTALKER', 'Hats\\KF_' + charModInfo.id);
+            // replaceExistingValue('HAT_DEERSTALKER', 'KF_' + charModInfo.id);
         } else {
             // Set to an empty model
             replaceExistingValue('Hats\\HAT_DEERSTALKER', 'Hats\\KFEMPTYMODEL');

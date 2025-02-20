@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Client</title>
+
+    <style>
+
+        * {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif !important;
+        }
+
+        #client-box {
+            position: absolute;
+            font-size: 30px;
+            top: 30px;
+            left: 30px;
+            width: calc(100% - 60px);
+            height: calc(100% - 60px);
+            /* padding: 15px 30px; */
+            box-sizing: border-box;
+        }
+
+        #button-actions-box {
+            position: absolute;
+            left: calc(100% - 395px);
+            top: 0px;
+            width: 420px;
+        }
+
+        @media (width < 874px) {
+            
+            #button-actions-box {
+                left: calc(100% - 320px) !important;
+                width: 330px !important;
+            }
+        }
+
+        #server-buttons-container {
+            background: #484f5c;
+            width: 210px;
+            /* height: max-content; */
+            height: 200px;
+            border-radius: 12px;
+            transform: translate(-230px, -65px);
+            border: 5px solid #c6cddb;
+            box-sizing: border-box;
+            color: white;
+            justify-content: center;
+            display: none;
+            gap: 10px;
+            overflow-y: auto;
+            flex-direction: column;
+            justify-content: start;
+        }
+        
+        #server-buttons-container > button {
+            margin-left: 5px;
+            margin-right: 5px;
+            font-size: 20px;
+        }
+        
+        #client-stats {
+            left: 0px;
+            top: 0px;
+        }
+
+
+        #other-infos {
+            top: calc(100% - 55px);
+            position: absolute;
+            font-size: 15px;
+        }
+
+
+
+        .txt-normal {
+            font-size: 25px;
+        }
+        
+        input {
+            border: 1px solid gray;
+            padding: 5px 10px;
+            box-sizing: border-box;
+        }
+
+        /* button {
+            font-size: 20px;
+            padding: 10px 25px;
+            cursor: pointer;
+            border: solid 1px gray;
+            border-radius: 12px;
+        } */
+        
+        button {
+            user-select: none;
+            padding: 15px 25px;
+            padding: 12.5px 25px;
+            font-size: 25px;
+            border: none;
+            border-radius: 14px;
+            font-family: system-ui;
+            font-weight: 600;
+            background: #80e1ff;
+            /* --border-txt-color: #2fe3ffb3; */
+            /* text-shadow: 0px 1px var(--border-txt-color), -1px -1px var(--border-txt-color), 1px 1px var(--border-txt-color), 1px -1px var(--border-txt-color), -1px 1px var(--border-txt-color), -1px -1px var(--border-txt-color), -1px 0px var(--border-txt-color); */
+            box-shadow: 0 0 5px cyan;
+            box-shadow: 0 0 5px 1px #4ed5ff;
+            cursor: pointer;
+            color: white;
+
+            /* TO TEST : (it's good) */
+            /* text-shadow: 0 0 1px white, 0 0 1px white; */
+
+            transition: all 0.3s ease;
+        }
+
+        button.canhover:hover {
+            transform: scale(1.15);
+            /* transform: scale(1.15) rotateX(-16deg) rotateY(10deg); */
+            /* box-shadow: 0 0 5px 1px #4ed5ff, 0 6px 5px 1px #4ed5ff4f; */
+            /* box-shadow: 0 0 7px 4px #4ed5ff; */
+        }
+
+        button.canhover:active {
+            /* transform: scale(0.8); */
+            
+            /* box-shadow: 0 0 7px 4px #4ed5ff; */
+        }
+
+        .separator {
+            display: table-row;
+            height: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div id="client-box">
+        <div id="client-stats">
+            <label data-stat-role="connection-state"></label>
+            <p class="separator"></p>
+            <button id="connection-button" class="txt-normal canhover" onclick="electronAPI.changeConnection();"></button>
+            <!-- <input class="txt-normal" type="text" placeholder="0.0.0.0.0:3001"> -->
+        </div>
+
+        <div id="button-actions-box">
+            
+            <button
+            data-button-role="disguise-u"
+            class="canhover"
+            style="
+                /* background: #bd80ff;
+                box-shadow: 0 0 5px rgb(170, 0, 255);
+                box-shadow: 0 0 5px 1px #d04eff; */
+                
+                background: #e069ff;
+                box-shadow: 0 0 5px rgb(170, 0, 255);
+                box-shadow: 0 0 8px 2px #d04eff;
+            "
+            onclick=" electronAPI.updateDisguise(); "
+            >Update Disguise</button>
+            <p></p>
+
+            <button class="canhover" style="
+                margin-top: 20px;
+                background: #ffb980;
+                box-shadow: 0 0 5px rgb(255 87 0);
+            "
+            onclick="
+            
+            if(this.classList.contains('canhover')) {
+                this.classList.remove('canhover');
+
+                this.innerHTML = 'Toogled';
+                
+                electronAPI.toogleWeapons();
+
+                setTimeout(() => {
+                    this.innerHTML = 'Toogle Weapons';
+                    this.classList.add('canhover');
+                }, 3000);
+            }
+            "
+            >Toogle Weapons</button>
+            
+            <p></p>
+            
+            <button
+            class="canhover"
+            style="
+                background: #ffe680;
+                box-shadow: 0 0 5px rgb(255, 200, 0);
+            "
+            onclick=" openEmotesMenu(); "
+            >Emotes</button>
+            
+            <button class="canhover" style="
+                background: #80ecff;
+                box-shadow: 0 0 5px rgb(0 217 255);
+                margin-left: 15px;
+                background: #80c7ff;
+                box-shadow: 0 0 5px rgb(0 133 255);
+            "
+            onclick="
+            
+            if(this.classList.contains('canhover')) {
+                this.classList.remove('canhover');
+                
+                this.innerHTML = 'Toogled';
+                electronAPI.toogleUI();
+
+                setTimeout(() => {
+                    this.innerHTML = 'Toogle UI';
+                    this.classList.add('canhover');
+                }, 3000);
+            }
+            "
+            >Toogle UI</button>
+
+            <div id="server-buttons-container">
+                <label style="
+                    font-size: 17px;
+                    font-weight: 500;
+                    margin-top: 8px;
+                    user-select: none;
+                ">Server custom-buttons:</label>
+            </div>
+        
+        </div>
+
+        <div id="other-infos">
+            <label data-stat-role="pos">X: ? | Y: ? | Z: ?</label>
+            <p data-stat-role="version"></p>
+        </div>
+        
+        <button class="canhover" style="
+                /* background: #bd80ff;
+                box-shadow: 0 0 5px rgb(170, 0, 255);
+                box-shadow: 0 0 5px 1px #d04eff; */
+                background: #d7d7d7;
+                /* box-shadow: 0 0 5px rgb(170, 0, 255); */
+                box-shadow: 0 0 8px 2px #b7b7b7;
+                font-size: 17px;
+                padding: 11px 7px;
+                border-radius: 5px;
+                margin-left: 15px;
+                position: absolute;
+                top: -10px;
+                left: calc(100% - 85px);
+            " onclick=" openSettings(); ">Settings</button>
+    </div>
+
+    <script>
+        function openEmotesMenu() {
+            let emoteMenu = document.createElement('div');
+
+            emoteMenu.style = `
+                width: 100%;
+                height: 100%;
+                z-index: 88;
+                position: absolute;
+                left: 0px;
+                top: 0px;
+                background: #ffc80070;
+                text-align: center;
+                backdrop-filter: blur(3px);
+            `;
+
+            emoteMenu.innerHTML = `
+            <p style="
+                font-size: 30px;
+                font-weight: 700;
+                user-select: none;
+            ">Emotes</p>
+            <p>Current Shortcut: ${electronAPI.getEmoteShortcut()} + EMOTE_KEY
+                <button is-edit-emote-shortcut="true" style="
+                    font-size: 15px;
+                    padding: 7px;
+                    background: white;
+                    color: black;
+                    border: 1px gray solid;
+                    border: solid 1px #a1a1a1;
+                    box-shadow: none;
+                    border-radius: 5px;
+                ">EDIT</button>
+            </p>
+
+            <button is-emote-back="true" style="
+                position: absolute;
+                left: 2px;
+                top: 10px;
+                background: #f7f7f7;
+                color: black;
+                border: 1px gray solid;
+                box-shadow: none;
+                border-radius: 8px;
+                padding: 10px 18px;
+            ">Back</button>
+
+            <div is-emote-container="true" style="
+                width: 90%;
+                left: 5%;
+                position: absolute;
+                margin-top: 25px;
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                justify-content: center;
+            "></div>
+            `;
+
+            emoteMenu.querySelector('button[is-edit-emote-shortcut="true"]').onclick = () => {
+                electronAPI.editEmoteShortcut();
+                emoteMenu.remove();
+            }
+            
+            emoteMenu.querySelector('button[is-emote-back="true"]').onclick = () => {
+                emoteMenu.remove();
+            }
+
+            const emoteContainer = emoteMenu.querySelector('div[is-emote-container="true"]');
+
+            function addEmoteBox(name, shortcut) {
+                let emoteBox = document.createElement('div');
+                emoteBox.style = `
+                    width: 116px;
+                    height: 110px;
+                    border-radius: 12px;
+                    background: #f5f5dc;
+                    border: 2px solid #d4d4d4;
+                    padding-top: 10px;
+                    padding-right: 2px;
+                    padding-left: 2px;
+                    box-shadow: 0 0 5px #00000069;
+                `;
+
+                let label = document.createElement('label');
+                label.style = `user-select: none;`;
+                label.innerText = name;
+                emoteBox.appendChild(label);
+                
+                let shortcutText = document.createElement('p');
+                shortcutText.innerText = 'Shortcut: ' + electronAPI.getEmoteShortcut() + ' + ' + shortcut;
+                emoteBox.appendChild(shortcutText);
+                
+                emoteContainer.appendChild(emoteBox);
+            }
+
+            electronAPI.getEmotes().forEach(emoteObject => addEmoteBox(emoteObject.name, emoteObject.shortcut));
+
+            document.body.appendChild(emoteMenu);
+        }
+
+        
+        function openSettings() {
+
+            let currentSettings = electronAPI.getPlayerSettings();
+            // let currentSettings = {
+            //     autoUpdateDisguise: false,
+            //     autoJoinServer: "",
+            // };
+            if(currentSettings == null) return;
+
+            let settingsMenu = document.createElement('div');
+
+            settingsMenu.style = `
+                width: 100%;
+                height: 100%;
+                z-index: 88;
+                position: absolute;
+                left: 0px;
+                top: 0px;
+                background: rgb(171 171 171 / 44%);
+                text-align: center;
+                backdrop-filter: blur(3px);
+            `;
+
+            const checkBoxesCSS = `
+            style="
+                width: 20px;
+                height: 20px;
+            "
+            `;
+
+            const textInputCSS = `
+            style="
+                width: 175px;
+                height: 25px;
+            "
+            `;
+
+            settingsMenu.innerHTML = `
+            <p style="
+                font-size: 30px;
+                font-weight: 700;
+                user-select: none;
+            ">Settings</p>
+
+            <div is-settings-container="true" style="
+                padding: 50px;
+                margin-top: 25px;
+                margin-left: 50px;
+                background: white;
+                margin-right: 50px;
+                margin-bottom: 20px;
+                border-radius: 16px;
+            ">
+                
+                <button style="
+                    background: #f7f7f7;
+                    color: black;
+                    border: 1px gray solid;
+                    box-shadow: none;
+                    border-radius: 8px;
+                    padding: 5px 10px;
+                    font-size: 15px;
+                "
+                data-setting-edit-specialattack-key="true"
+                >Change special-attack Key</button>
+
+                <p></p>
+                <label>Update automatically the disguise when you join a server:</label> <input ${checkBoxesCSS}
+                type="checkbox" data-setting-auto-update-disguise="true"
+                ${currentSettings.autoUpdateDisguise ? "checked" : ""}
+                >
+                <p></p>
+                <label>Join automatically a server:</label> <input ${checkBoxesCSS}
+                type="checkbox" data-setting-auto-join-server="true"
+                ${currentSettings.autoJoinServer != ''  ? "checked" : ""}
+                >
+                <p></p>
+                <label>Server url to join:</label> <input ${textInputCSS}
+                type="text" data-setting-auto-join-url="true"
+                value="${currentSettings.autoJoinServer}"
+                >
+            </div>
+
+            
+            <button is-settings-back="true" style="
+                background: #f7f7f7;
+                color: black;
+                border: 1px gray solid;
+                box-shadow: none;
+                border-radius: 8px;
+                padding: 10px 18px;
+                font-size: 20px;
+            ">Cancel</button>
+            
+            <button is-settings-confirm="true" style="
+                background: #f7f7f7;
+                color: black;
+                border: 1px gray solid;
+                box-shadow: none;
+                border-radius: 8px;
+                padding: 10px 18px;
+                font-size: 20px;
+            ">Confirm Settings</button>
+            `;
+            
+            settingsMenu.querySelector('button[is-settings-back="true"]').onclick = () => {
+                settingsMenu.remove();
+            }
+            
+            settingsMenu.querySelector('button[is-settings-confirm="true"]').onclick = () => {
+                currentSettings.autoUpdateDisguise = !!settingsMenu.querySelector('input[data-setting-auto-update-disguise="true"]').checked;
+
+                if(settingsMenu.querySelector('input[data-setting-auto-join-server="true"]').checked) {
+                    currentSettings.autoJoinServer = settingsMenu.querySelector('input[data-setting-auto-join-url="true"]').value+'';
+                } else {
+                    currentSettings.autoJoinServer = "";
+                }
+                // console.log(currentSettings);
+                settingsMenu.remove();
+                electronAPI.sendNewPlayerSettings(currentSettings);
+            }
+            
+            settingsMenu.querySelector('button[data-setting-edit-specialattack-key="true"]').onclick = () => {
+                electronAPI.editSpecialAttackKey();
+            }
+
+            document.body.appendChild(settingsMenu);
+        }
+    </script>
+</body>
+</html>

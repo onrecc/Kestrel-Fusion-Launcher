@@ -1,0 +1,1 @@
+This folder is used just for install some modules into this mod and not having to install the modules into the entire launcher.

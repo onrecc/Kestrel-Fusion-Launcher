@@ -1,0 +1,54 @@
+Character me(GetCharacter());
+Global Character cPlayer1;
+Global Character cPlayer2;
+
+Number totalTickC(1);
+
+State Base ()
+{
+	Conditions
+	{
+
+		// To optimise the ai :
+		totalTickC = totalTickC - 1;
+
+		if(totalTickC <= 0) {
+
+			totalTickC = 6;
+
+			if(!me) {
+
+				wait(1.5);
+				
+				if(!me) {
+					goto charEnd();
+				}
+			}
+
+            if(me.DistanceTo(cPlayer1) > 16) {
+                goto charEnd();
+            }
+
+            me.Attack(cPlayer1);
+		}
+	};
+	Actions
+	{
+ 	};
+};
+
+
+State charEnd ()
+{
+	Conditions
+	{};
+	Actions
+	{
+		if(me) {
+			me.Kill();
+		}
+	};
+};
+
+
+Base();

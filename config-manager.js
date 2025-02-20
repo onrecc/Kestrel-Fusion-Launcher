@@ -59,7 +59,7 @@ if(configDatas.notLoaded == null) {
 // }
 
 
-// Load the game .exe name if he was not already found :
+// Load the game .exe name if it was not already found :
 if(configDatas.exename == null && configDatas.notLoaded == null) {
     
     try {
@@ -106,8 +106,11 @@ if(configDatas.notLoaded == null) {
 
         configDatas['user-preferences'].themes = [];
     }
+
+    if(configDatas == null) configDatas['open-in-cmd'] = true;
 }
 
+configDatas.baseShortcut = configDatas.baseShortcut || "Shift+<";
 
 configDatas.save = () => {
     try {

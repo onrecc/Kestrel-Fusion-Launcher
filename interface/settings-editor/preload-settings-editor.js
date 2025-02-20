@@ -30,10 +30,25 @@ let editableSettings = [
         id: "close-after-game-launched",
         type: 'boolean',
         input: null
-    }
-]
+    },
+    {
+        name: 'close the app after launched the game',
+        id: "close-after-game-launched",
+        type: 'boolean',
+        input: null
+    },
+    // {
+    //     name: "Base Shortcut",
+    //     id: "baseShortcut",
+    //     type: 'string',
+    //     input: null,
+    //     help: "IMPORTANT: don't use only one letter, it's recommanded to start with something like 'Shift+' or 'Ctrl+'"
+    // }
+];
 
-
+const printToS = (msg) => {
+    ipcRenderer.send(idCommunicationWindow + 'printmsg', msg);
+};
 
 ipcRenderer.on('configManager', (ev, newConfigM) => {
     console.log('received config manager');
@@ -43,7 +58,7 @@ ipcRenderer.on('configManager', (ev, newConfigM) => {
 
     parentForSettings.innerHTML = '';
 
-    function addSetting(settingname, settingid, settingtype) {
+    function addSetting(settingname, settingid, settingtype, settinghelp) {
 
         let el = document.createElement('div');
 
@@ -54,6 +69,8 @@ ipcRenderer.on('configManager', (ev, newConfigM) => {
 
         let input = document.createElement('input');
 
+        let helpButton;
+
         switch (settingtype) {
             case 'boolean':
                 input.type = 'checkbox';
@@ -63,15 +80,49 @@ ipcRenderer.on('configManager', (ev, newConfigM) => {
             case 'string':
                 input.type = 'text';
                 input.value = config[settingid];
+                
+                if(settinghelp) {
+                    input.disabled = true;
+                    helpButton = document.createElement('button');
+                    helpButton.innerHTML = 'Help';
+                    helpButton.style = `
+                        margin: 0;
+                        font-size: 15px;
+                        padding: 5px 10px;
+                    `;
+                    helpButton.onclick = () => {
+                        input.disabled = false;
+                        printToS( settinghelp );
+                        el.onclick = null;
+                    }
+                }
                 break;
         
             default:
                 input.type = 'text';
                 input.value = config[settingid];
+                
+                if(settinghelp) {
+                    input.disabled = true;
+                    helpButton = document.createElement('button');
+                    helpButton.innerHTML = 'Help';
+                    helpButton.style = `
+                        margin: 0;
+                        font-size: 15px;
+                        padding: 5px 10px;
+                    `;
+                    helpButton.onclick = () => {
+                        input.disabled = false;
+                        electronAPI.printToS( settinghelp );
+                        el.onclick = null;
+                    }
+                }
                 break;
         }
 
         el.appendChild(input);
+
+        if(helpButton) el.appendChild(helpButton);
 
         parentForSettings.appendChild(el);
 
@@ -79,13 +130,17 @@ ipcRenderer.on('configManager', (ev, newConfigM) => {
     }
 
     editableSettings.forEach(
-        setting => setting.input = addSetting(setting.name, setting.id, setting.type)
+        setting => setting.input = addSetting(setting.name, setting.id, setting.type, setting.help)
     );
 
 });
 
 
 contextBridge.exposeInMainWorld('electronAPI', {
+
+    // printToS: (msg) => {
+    //     ipcRenderer.send(idCommunicationWindow + 'printmsg', msg);
+    // },
 
     cancelChanges: () => {
         setTimeout(() => {

@@ -1,0 +1,1011 @@
+// THIS CODE IS ORIGINALLY MADE BY NODE
+
+
+WorldLevel wlCity("Lego_City");
+
+Global Character cPlayer1;
+Global Character cPlayer2;
+
+// The max number of players
+Number maxPlayersNumb(25);
+
+Number maxSmoothPlayers(6);
+
+Bool isDebugM( false );
+
+Job jAct4("Flow_Setup.Act_4");
+Job jAct3("Flow_Setup.Act_3");
+
+Character cMarkerChar;
+
+Global CityArray onlineChars(CityArray_Create("Character"));
+Global CityArray onlineDisguiseNames(CityArray_Create("Text"));
+Global CityArray onlineDisguiseClasses(CityArray_Create("Text"));
+CityArray caAnimStates(CityArray_Create("Text"));
+CityArray caAnimIds(CityArray_Create("Number"));
+CityArray caPrevPositions(CityArray_Create("Position"));
+CityArray caNewPositions(CityArray_Create("Position"));
+CityArray caLerpSteps(CityArray_Create("Number"));
+CityArray caLerpStages(CityArray_Create("Number"));
+CityArray caTickCounters(CityArray_Create("Number"));
+Global CityArray onlineVehicles(CityArray_Create("Vehicle"));
+CityArray caVehicleStates(CityArray_Create("Number"));
+
+Global CityArray visibleInMapPlyrs(CityArray_Create("Number"));
+
+Job jVehicleState("SuperBuild_Saves.IS_Space_Centre_Island.3323_Shuttle");
+jVehicleState.SetValue("nState", 1000);
+Number nVehicleState(0);
+
+// The minimum size of the boats ids :
+Number boatsStartNumb(40);
+
+// The minimum size of the creatures ids :
+Number creaturesStartNumb(50);
+
+
+// NEW
+jAct3.SetValue("Act3_Stage", 1001);
+
+
+State Base() 
+{
+    // Code in a Conditions block is executed repeatadly in an infinite loop.
+    Conditions
+    {
+
+        // If have 0 HP using the rotation communication variable to send it
+        if(cPlayer1.InContext("DeathContext")) {
+            
+            jVehicleState.SetValue("nState", 190401);
+
+        } else {
+            
+            // If have a vehicle, update it with the rotation
+            if(nVehicleState == 0) {
+                
+                if (cPlayer1.GetVehicle()) {
+                    Vehicle vTemp;
+                    Text tVehicleClass;
+                    
+                    vTemp = cPlayer1.GetVehicle();
+                    tVehicleClass = vTemp.GetModelName();
+                    
+
+                    if (!vTemp.GetDriver())    {    nVehicleState = 0;     }
+                    elseif    ( tVehicleClass == "POLICE_CHOPPER" )               {    nVehicleState = 4;     }
+                    elseif    ( tVehicleClass == "AIRCRAFT_HERA" )                {    nVehicleState = 5;     }
+                    elseif    ( tVehicleClass == "FIRE_CAMEL" )                   {    nVehicleState = 6;     }
+                    elseif    ( tVehicleClass == "POLICE_RESPONDER" )             {    nVehicleState = 7;     }
+                    elseif    ( tVehicleClass == "AIRCRAFT_CLOUD" )               {    nVehicleState = 8;     }
+                    elseif    ( tVehicleClass == "AIRCRAFT_KONGAMATO" )           {    nVehicleState = 9;     }
+                    elseif    ( tVehicleClass == "UBER_POSEIDON" )                {    nVehicleState = 1;     }
+                    elseif    ( tVehicleClass == "POLICE_SKYBRINGER" )            {    nVehicleState = 10;    }
+                    elseif    ( tVehicleClass == "HOSPITAL_SWOOPER" )             {    nVehicleState = 11;    }
+                    elseif    ( tVehicleClass == "AIRCRAFT_UFO" )                 {    nVehicleState = 12;    }
+                    elseif    ( tVehicleClass == "AIRCRAFT_JUPITER" )             {    nVehicleState = 13;    }
+                    elseif    ( tVehicleClass == "UBER_TEMPEST" )                 {    nVehicleState = 14;    }
+                    elseif    ( tVehicleClass == "2016_POLICE_GUARDIAN" )         {    nVehicleState = 10;    }
+                    elseif    ( tVehicleClass == "SUV_BASTION" )                     {    nVehicleState = 2;    }
+                    elseif    ( tVehicleClass == "POLICE_BASTION" )                  {    nVehicleState = 2;    }
+                    elseif    ( tVehicleClass == "POLICE_VIGILANT" )                 {    nVehicleState = 2;    }
+                    elseif    ( tVehicleClass == "POLICE_RINO" )                     {    nVehicleState = 2;    }
+                    elseif    ( tVehicleClass == "2016_POLICE_DETAINER" )            {    nVehicleState = 2;    }
+                    elseif    ( tVehicleClass == "POLICE_IMPRISONER" )               {    nVehicleState = 2;    }
+                    elseif    ( tVehicleClass == "CIVIC_TAXICAB" )                {    nVehicleState = 15;    }
+                    elseif    ( tVehicleClass == "CIVIC_EPONA" )                  {    nVehicleState = 16;    }
+                    elseif    ( tVehicleClass == "MUSCLECARS_NARYM_MISSION" )     {    nVehicleState = 17;    }
+                    elseif    ( tVehicleClass == "MUSCLECARS_TIGERELLA" )         {    nVehicleState = 18;    }
+                    elseif    ( tVehicleClass == "MUSCLECARS_ENBERG" )            {    nVehicleState = 18;    }
+                    elseif    ( tVehicleClass == "MUSCLECARS_SILVERSMITH" )       {    nVehicleState = 19;    }
+                    elseif    ( tVehicleClass == "SPORTSCARS_GERSEMI" )           {    nVehicleState = 20;    }
+                    elseif    ( tVehicleClass == "SPORTSCARS_CHANS_DRAKONAS" )    {    nVehicleState = 21;    }
+                    elseif    ( tVehicleClass == "CHANS_DRAKONAS" )               {    nVehicleState = 21;    }
+                    elseif    ( tVehicleClass == "SALOONCARS_INDULGA" )           {    nVehicleState = 22;    }
+                    elseif    ( tVehicleClass == "POLICE_MOV_CAB" )               {    nVehicleState = 23;    }
+                    elseif    ( tVehicleClass == "SPORTSCARS_CETAN" )             {    nVehicleState = 24;    }
+                    elseif    ( tVehicleClass == "MUSCLECARS_FALCHIONGT" )        {    nVehicleState = 25;    }
+                    elseif    ( tVehicleClass == "SPORTSCARS_LANTOS" )            {    nVehicleState = 26;    }
+                    elseif    ( tVehicleClass == "SPORTSCARS_ROAR" )              {    nVehicleState = 27;    }
+                    elseif    ( tVehicleClass == "FARM_DEVOURER" )                {    nVehicleState = 28;    }
+                    elseif    ( tVehicleClass == "VAN_GOTLAND" )                  {    nVehicleState = 29;    }
+                    elseif    ( tVehicleClass == "MOTORCYCLES_VOR" )              {    nVehicleState = 30;    }
+                    elseif    ( tVehicleClass == "MOTORCYCLES_BUZZER" )           {    nVehicleState = 31;    }
+                    elseif    ( tVehicleClass == "MOTORCYCLES_REDEEMER" )         {    nVehicleState = 31;    }
+                    elseif    ( tVehicleClass == "POLICE_CHASER" )                {    nVehicleState = 31;    }
+                    elseif    ( tVehicleClass == "2016_POLICE_DASHER" )           {    nVehicleState = 31;    }
+                    elseif    ( tVehicleClass == "MOTORCYCLES_ROAMER" )           {    nVehicleState = 32;    }
+                    elseif    ( tVehicleClass == "POLICE_DUNBYPATROLLO" )         {    nVehicleState = 32;    }
+                    elseif    ( tVehicleClass == "NAVAL_AROWANA" )              {    nVehicleState = boatsStartNumb;    }
+                    elseif    ( tVehicleClass == "NAVAL_CHANS_AROWANA" )        {    nVehicleState = boatsStartNumb;    }
+                    elseif    ( tVehicleClass == "NAVAL_LIBERTY" )              {    nVehicleState = boatsStartNumb + 1;    }
+                    elseif    ( tVehicleClass == "POLICE_MINNOW" )              {    nVehicleState = boatsStartNumb + 2;    }
+                    elseif    ( tVehicleClass == "POLICE_DRIFTER" )             {    nVehicleState = boatsStartNumb + 3;    }
+                    elseif    ( tVehicleClass == "NAVAL_HAULER2" )              {    nVehicleState = boatsStartNumb + 4;    }
+                    else {
+                        tVehicleClass = vTemp.GetCategory();
+                        // If is in an unkown boat say that the player is in the NAVAL_AROWANA
+                        if(tVehicleClass == "Naval") {
+                            nVehicleState = boatsStartNumb;
+                        } else {
+                            if(tVehicleClass == "Aircraft") {
+                                nVehicleState = 12;
+                            } else {
+                                nVehicleState = 1;
+                            }
+                        }
+                    };
+
+                    // INFO FOR CARS : if you are in a Chans_Drakonas or a Drakonas, the other players will see anyway a Chans_Drakonas (it's the same for Chans_Arowana and Arowana but here it's the classic Arowana that will be visible)
+            
+
+
+                    // This part update the car player position and rotation to the python script
+                    if (nVehicleState != jVehicleState.GetValue("nState"))
+                    {
+                        Number nRot;
+                        nRot = cPlayer1.GetDirection();
+                        nRot = (nRot / 65535) * 360;
+                        jVehicleState.SetValue("nState", (nVehicleState*1000)+nRot);
+                    };
+                }
+                else
+                {
+
+                    // If ride a character, update it with the rotation
+
+                    if(cPlayer1.GetRidden()) {
+
+                        Character riddenChar (cPlayer1.GetRidden());
+                        
+                        if(riddenChar) {
+                            Text charVName( riddenChar.GetModelName() );
+
+                            if(charVName == "PIG") { nVehicleState = creaturesStartNumb; }
+                            elseif(charVName == "NOVELTY_BEHEMOTH") { nVehicleState = creaturesStartNumb + 1; }
+                            elseif(charVName == "UBER_BEHEMOTH") { nVehicleState = creaturesStartNumb + 2; }
+                            elseif(charVName == "NOVELTY_MEGAFIG") { nVehicleState = creaturesStartNumb + 3; }
+                            else { nVehicleState = 0; }
+                            
+                        } else {
+                            nVehicleState = 0;
+                        }
+
+                    } else {
+                        nVehicleState = 0;
+                    }
+
+                    Number nRot;
+                    nRot = cPlayer1.GetDirection();
+                    nRot = (nRot / 65535) * 360;
+                    jVehicleState.SetValue("nState", (nVehicleState*1000)+nRot);
+                };
+
+            } else {
+            
+                // If haven't a vehicle, update it with the rotation
+                if((!cPlayer1.GetVehicle()) && (!cPlayer1.GetRidden())) {
+                    nVehicleState = 0;
+                }
+
+                Number nRot;
+                nRot = cPlayer1.GetDirection();
+                nRot = (nRot / 65535) * 360;
+                jVehicleState.SetValue("nState", (nVehicleState*1000)+nRot);
+            }
+        }
+
+
+        // detect that the python script sent a data :
+        if (jAct3.GetValue("Act3_Stage") != 1001) {
+            Number x;
+            Number y;
+            Number z;
+            Number c;
+
+            Number pid; // player id
+            Number cmd; // what type of data is being received
+            Number cmd_data; // the data being received
+
+            x = jAct4.GetValue("Act4_Mission");
+            y = jAct4.GetValue("Act4_Stage");
+            z = jAct3.GetValue("Act3_Mission");
+            c = jAct3.GetValue("Act3_Stage");
+
+            x = (x / 1000) - 2000;
+            y = (y / 1000) - 2000;
+            z = (z / 1000) - 2000;
+
+
+            // Here's some cursed wizardry to split an integer into 3 parts
+            jAct3.SetValue("Act3_Stage", c/10000);
+            pid = jAct3.GetValue("Act3_Stage");
+
+            jAct3.SetValue("Act3_Stage", (c/1000) - (pid*10));
+            cmd = jAct3.GetValue("Act3_Stage");
+
+            jAct3.SetValue("Act3_Stage", (c) - ((cmd*1000)+(pid*10000)));
+            cmd_data = jAct3.GetValue("Act3_Stage");
+
+
+            // The following code was originally split off into a function,
+            // but doing so resulted in the most abnormal and unexplainable bugs
+            // I've ever had to debug, where changing disguise would cause the values
+            // read from Act3_Stage to be corrupted(?). I can't even begin to describe how
+            // absurdly annoying it was to figure out. The code is messier now, but as long as it
+            // works, that's all I care about.
+
+            Position pPosition(x,y,z);
+            Number nPid(pid);
+            Number nCmd(cmd);
+            Number nCmdData(cmd_data);
+
+            Character cTemp;
+            cTemp = onlineChars.Get(nPid);
+
+            // IF THE CHARACTER THAT WILL BE "edited" DON'T EXIST OR IS DED, SPAWN IT AGAIN
+            if(!cTemp) {
+
+                Text charDisguiseC( onlineDisguiseClasses.Get(nPid) );
+                Text charDisguiseN( onlineDisguiseNames.Get(nPid) );
+
+                cTemp = CreateAiCharacter(charDisguiseN, charDisguiseC, pPosition, 2.347);
+                While (!cTemp) {};
+                cTemp.SetInvulnerable(true);
+                cTemp.SetAiOverride(true);
+                cTemp.LockInPlace(true);
+                SetCharacterFlags(Character=cTemp, #DontPush, #NoTerrain, #IgnoreGravity);
+
+                onlineChars.Set(nPid, cTemp);
+                
+                // Text tAnimNameOld;
+                // tAnimNameOld = caAnimStates.Get(nPid);
+                // cTemp.PlayContextAnimation(tAnimNameOld, -1);
+
+                if(visibleInMapPlyrs.Get(nPid) == 1) {
+                    cTemp.UI_Map_SetCharacterActive(true);
+                }
+            }
+            
+            Number nFrameCount;
+            Number nNewStep;
+            nFrameCount = caTickCounters.Get(nPid);
+            nNewStep = 1 / nFrameCount;
+            caLerpSteps.Set(nPid, nNewStep);
+            caLerpStages.Set(nPid, 0);
+            caTickCounters.Set(nPid, 1);
+            
+            Position pTemp;
+            pTemp = caNewPositions.Get(nPid);
+            caPrevPositions.Set(nPid, pTemp);
+            caNewPositions.Set(nPid, pPosition);
+            
+            Character riddenCharT;
+            
+            if(cTemp.GetRidden()) {
+                riddenCharT = cTemp.GetRidden();
+                riddenCharT.Teleport(pTemp);
+            } else {
+                //NEW
+                if(nPid >= maxSmoothPlayers) {
+                    cTemp.Teleport(pTemp);
+                }
+            }
+
+            if (nCmd == 0)
+            {
+                // Position + Rotation update
+
+                Number nRotation;
+                nRotation = (nCmdData / 360) * 65535;
+
+                if(riddenCharT) {
+                    riddenCharT.Teleport(pTemp, nRotation);
+                } else {
+                    cTemp.Teleport(pTemp, nRotation);
+                }
+                // onlineChars.Set(nPid, cTemp);
+            }
+            
+            elseif (nCmd == 1)
+            {
+                // Position + Animation update
+
+
+                Text tAnimName;
+
+                // If is on a pig and if attack but already attacked before (the attack id is everytime 3)
+                
+                if(riddenCharT) {
+                    
+                    tAnimName = riddenCharT.GetModelName();
+
+                    if(tAnimName == "PIG") {
+                        tAnimName = "ride_pig_idle";
+                    } else {
+                        tAnimName = GetAnimation(nCmdData);
+                    }
+                
+                } elseif(nCmdData == 3 && caAnimStates.Get(nPid) == "prop_punch_right") {
+                    
+                    tAnimName = "prop_punch_left";
+                
+                } else {
+                    
+                    tAnimName = GetAnimation(nCmdData);
+                }
+
+                
+                cTemp.PlayContextAnimation(tAnimName, -1);
+
+                caAnimStates.Set(nPid, tAnimName);
+
+                // Remove the items of the old played anims
+                if(caAnimIds.Get(nPid) >= 80 && nCmdData < 80 && (!cTemp.GetRidden())) {
+                    // ManageItem(Character=cTemp, ItemType="RockingChair", #Remove, #AnimModeSnap, #NoSound);
+                    // ManageItem(Character=cTemp, ItemType="Caffe", #Remove, #AnimModeSnap, #NoSound);
+
+                    Number oldDirectionPlyr(cTemp.GetDirection());
+
+                    cTemp.Kill();
+
+                    Text charDisguiseC( onlineDisguiseClasses.Get(nPid) );
+                    Text charDisguiseN( onlineDisguiseNames.Get(nPid) );
+
+                    cTemp = CreateAiCharacter(charDisguiseN, charDisguiseC, pPosition, oldDirectionPlyr);
+                    cTemp.SetInvulnerable(true);
+                    cTemp.SetAiOverride(true);
+                    cTemp.LockInPlace(true);
+                    SetCharacterFlags(Character=cTemp, #DontPush, #NoTerrain, #IgnoreGravity);
+
+                    onlineChars.Set(nPid, cTemp);
+                    
+                    Text tAnimNameOld;
+                    tAnimNameOld = caAnimStates.Get(nPid);
+                    cTemp.PlayContextAnimation(tAnimNameOld, -1);
+
+                    if(visibleInMapPlyrs.Get(nPid) == 1) {
+                        cTemp.UI_Map_SetCharacterActive(true);
+                    }
+                }
+
+                caAnimIds.Set(nPid, nCmdData);
+                // onlineChars.Set(nPid, cTemp);
+                
+            }
+            
+            elseif (nCmd == 2)
+            {
+
+                // ****** THIS CODE IS UNUSED NOW : ******
+
+                // Position + Disguise update
+
+                if(!cTemp.GetRidden()) {
+
+                    Number nRotation;
+                    nRotation = cTemp.GetDirection();
+
+                    Text tDisguiseName;
+                    Text tDisguiseClass;
+                    tDisguiseName = GetDisguiseName(nPid, nCmdData);
+                    tDisguiseClass = GetDisguiseClass(nPid, nCmdData);
+
+                    cTemp.Kill();
+                    cTemp = CreateAiCharacter(tDisguiseName, tDisguiseClass, pTemp, nRotation);
+                    While (!cTemp) {};
+                    cTemp.SetInvulnerable(true);
+                    cTemp.SetAiOverride(true);
+                    cTemp.LockInPlace(true);
+                    SetCharacterFlags(Character=cTemp, #DontPush, #NoTerrain, #IgnoreGravity);
+
+                    Text tAnimName;
+                    tAnimName = caAnimStates.Get(nPid);
+                    cTemp.PlayContextAnimation(tAnimName, -1);
+                    
+                    if(visibleInMapPlyrs.Get(nPid) == 1) {
+                        cTemp.UI_Map_SetCharacterActive(true);
+                    }
+
+                    PlaySFX(sfx="SwChar", TargetCharacter=cTemp);
+                    onlineChars.Set(nPid, cTemp);
+                }
+                
+                // ****** THIS CODE IS UNUSED NOW /\ ******
+
+            }
+            
+            elseif (nCmd == 3)
+            {
+                // Position + Vehicle update
+
+
+
+                // Character cTemp;
+                // cTemp = onlineChars.Get(nPid);
+                // onlineChars.Set(nPid, cTemp);
+
+                Vehicle vTemp;
+                vTemp = onlineVehicles.Get(nPid);
+                if(vTemp) {
+                    vTemp.Destroy();
+                }
+
+                if(cTemp.GetRidden()) {
+                    Character riddenChar( cTemp.GetRidden() );
+                    ManageTakeOver(Character=cTemp, #ReleaseRight, #Instant);
+                    wait(0.05);
+                    riddenChar.Kill();
+                }
+
+                if (nCmdData != 0)
+                {
+                    Number nRot;
+                    nRot = cTemp.GetDirection();
+
+                    Text tName;
+                    Text tClass;
+
+                    tName = GetVehicleName(nCmdData);
+                    tClass = GetVehicleClass(nCmdData);
+
+                    if(tClass == "RideableCreature") {
+                        
+                        Character charVehicle;
+                        charVehicle = CreateAiCharacter(tName, tClass, pTemp, nRot);
+                        While (!charVehicle) {};
+                        charVehicle.SetInvulnerable(true);
+                        charVehicle.SetAiOverride(true);
+                        charVehicle.LockInPlace(true);
+                        SetCharacterFlags(Character=charVehicle, #DontPush, #NoTerrain, #IgnoreGravity);
+                        ManageTakeover(Character=cTemp, TakeOver=charVehicle, #Instant, #LockedIn);
+                        if(tName == "Pig") {
+                            caAnimStates.Set(nPid, "ride_pig_idle");
+                            cTemp.PlayContextAnimation("ride_pig_idle", -1);
+                        }
+
+                    } else {
+
+                        vTemp = CreateAiVehicle(tName, tClass, pTemp, nRot);
+                        While (!vTemp) {};
+                        vTemp.ForceMaxDetail(true);
+                        vTemp.SetSeatLocked(#Driver, true);
+                        vTemp.SetInvulnerable(true);
+                    }
+                }
+
+                onlineVehicles.Set(nPid, vTemp);
+                caVehicleStates.Set(nPid, nCmdData);
+            };
+
+            jAct3.SetValue("Act3_Stage", 1001);
+        };
+        
+        
+        if (isDebugM) {
+            
+            // for debugging purposes to ensure the mod is running and active
+            if(PlayerPressedButton("L3")) {
+                cPlayer1.SetHealth(#Minus, 1);
+            }
+
+            // holding R3 temporarily disables smoothing, for testing purposes
+            if(!PlayerHeldButton("R3")) {
+                
+                // Number plyrIndex(0);
+
+                // While (plyrIndex < maxSmoothPlayers) {
+                //     HandlePlayerLerp(plyrIndex);
+                //     plyrIndex = plyrIndex + 1;
+                // };
+                HandlePlayerLerp(0);
+                HandlePlayerLerp(1);
+                HandlePlayerLerp(2);
+                HandlePlayerLerp(3);
+                HandlePlayerLerp(4);
+                HandlePlayerLerp(5);
+            }
+
+        } else {
+            
+            // Number plyrIndex(0);
+
+            // While (plyrIndex < maxSmoothPlayers) {
+            //     HandlePlayerLerp(plyrIndex);
+            //     plyrIndex = plyrIndex + 1;
+            // };
+
+            HandlePlayerLerp(0);
+            HandlePlayerLerp(1);
+            HandlePlayerLerp(2);
+            HandlePlayerLerp(3);
+            HandlePlayerLerp(4);
+            HandlePlayerLerp(5);
+        }
+
+    };
+    
+    Actions
+    {
+        // The array initialisation in here is quite long and there is probably
+        // a better way to do it, but this is the best I've got for now.
+        // CityArrays are messy, so you want to be as careful as possible with them.
+        
+        While(!wlCity.IsLoaded()) {};
+
+        //wait(8);
+
+        jAct3.SetValue("Act3_Stage", 1001);
+
+        Number newPlayerIndex(0);
+
+        While (newPlayerIndex < maxPlayersNumb) {
+
+            Character newPlayerChar;
+            
+            Position charPos(0, 80, 0);
+            newPlayerIndex = newPlayerIndex + 1;
+
+            // newPlayerChar = CreateAiCharacter("FrankHoney", "Special", charPos, 0);
+            // While (!newPlayerChar) {};
+            // newPlayerChar.SetInvulnerable(true);
+            // newPlayerChar.SetAiOverride(true);
+            // newPlayerChar.LockInPlace(true);
+            // SetCharacterFlags(Character=newPlayerChar, #DontPush, #NoTerrain, #IgnoreGravity);
+            
+            onlineDisguiseNames.Add("FrankHoney");
+            onlineDisguiseClasses.Add("Special");
+
+            onlineChars.Add(newPlayerChar);
+
+            caAnimStates.Add("idle");
+            caAnimIds.Add(0);
+
+            Position pPrevPosExt(0,10,0);
+            caPrevPositions.Add(pPrevPosExt);
+            
+            Position pNewPosExt(0,10,0);
+            caNewPositions.Add(pNewPosExt);
+
+            caLerpSteps.Add(0.2);
+
+            caLerpStages.Add(0);
+            
+            caTickCounters.Add(1);
+
+            Vehicle vExt;
+            onlineVehicles.Add(vExt);
+            
+            caVehicleStates.Add(0);
+            
+            visibleInMapPlyrs.Add(0);
+        };
+        
+    };
+};
+
+
+
+Function GetAnimation(Number anim_id) returns Text
+{
+    Text anim_name("idle");
+
+    // BEFORE : elseif (anim_id == 3) { anim_name = "tiptoe"; }
+
+    if (anim_id == 0) { anim_name = "idle"; }
+    elseif (anim_id == 2) { anim_name = "fall"; }
+    elseif (anim_id == 3) { anim_name = "prop_punch_right"; }
+    elseif (anim_id == 4) { anim_name = "walk"; }
+    elseif (anim_id == 5) { anim_name = "run"; }
+    elseif (anim_id == 6) { anim_name = "sprint"; }
+    elseif (anim_id == 7) { anim_name = "combatroll_land"; }
+    elseif (anim_id == 8) { anim_name = "fallland"; }
+    elseif (anim_id == 9) { anim_name = "land"; }
+    elseif (anim_id == 10) { anim_name = "wade"; }
+    elseif (anim_id == 11) { anim_name = "swim"; }
+    elseif (anim_id == 12) { anim_name = "teeter"; }
+    elseif (anim_id == 13) { anim_name = "Whistle_Run"; }
+    elseif (anim_id == 14) { anim_name = "Whistle"; }
+    elseif (anim_id == 15) { anim_name = "combatroll_jump"; }
+    elseif (anim_id == 16) { anim_name = "ride_car"; }
+    elseif (anim_id == 17) { anim_name = "Jump_Trampoline"; }
+    elseif (anim_id == 18) { anim_name = ""; }
+    elseif (anim_id == 19) { anim_name = ""; }
+    elseif (anim_id == 20) { anim_name = "Shrug"; }
+    elseif (anim_id == 21) { anim_name = "Jump"; }
+    elseif (anim_id == 22) { anim_name = "idle1"; }
+    elseif (anim_id == 23) { anim_name = "idle2"; }
+    elseif (anim_id == 24) { anim_name = "idle3"; }
+    elseif (anim_id == 25) { anim_name = "DisguiseBooth_idle"; }
+    elseif (anim_id == 26) { anim_name = "DisguiseBooth_in"; }
+    elseif (anim_id == 27) { anim_name = "DisguiseBooth_out"; }
+    elseif (anim_id == 28) { anim_name = "hover"; }
+    elseif (anim_id == 29) { anim_name = "fly"; }
+    elseif (anim_id == 30) { anim_name = "DRC_Intro2"; }
+    elseif (anim_id == 31) { anim_name = "DRC_Outro2"; }
+    elseif (anim_id == 32) { anim_name = "DRC_Idle2"; }
+    elseif (anim_id == 33) { anim_name = "splat"; }
+    elseif (anim_id == 34) { anim_name = "attack5"; }
+    elseif (anim_id == 35) { anim_name = "axesmash_interact"; }
+    elseif (anim_id == 36) { anim_name = ""; }
+    elseif (anim_id == 37) { anim_name = ""; }
+    elseif (anim_id == 38) { anim_name = ""; }
+    elseif (anim_id == 39) { anim_name = ""; }
+    elseif (anim_id == 40) { anim_name = ""; }
+    elseif (anim_id == 80) { anim_name = "talk"; }
+    elseif (anim_id == 81) { anim_name = "phone_idle"; }
+    elseif (anim_id == 82) { anim_name = "dance_01"; }
+    elseif (anim_id == 83) { anim_name = "star_jumps"; }
+    elseif (anim_id == 84) { anim_name = "cop_idle_salute"; }
+    elseif (anim_id == 85) { anim_name = "cafe_drink"; }
+    elseif (anim_id == 86) { anim_name = "pointatobject"; }
+    elseif (anim_id == 87) { anim_name = "ponder"; }
+    elseif (anim_id == 88) { anim_name = "rockingchair_idle"; }
+    elseif (anim_id == 89) { anim_name = "dance_02"; }
+    else { anim_name = "idle"; };
+
+    return anim_name;
+};
+
+
+
+
+// ****** THIS FUNCTION IS UNUSED NOW : ******
+
+Function GetDisguiseName(Number pid, Number type) returns Text
+{
+    // IIRC this code to make players 5 and 6 reuse the same disguises as player 1 and 2
+    // is broken, and causes things to break. If you have issues with more than 4 players,
+    // try deleting this if-statement. Make sure to delete the other one in the function below.
+    if (pid > 3)
+    {
+        pid = pid - 4;
+    };
+
+    if (pid == 0)
+    {
+        if (type == 0) { return "BarrySmith"; }
+        elseif (type == 1) { return "FrankHoney"; }
+        elseif (type == 2) { return "RobberG"; }
+        elseif (type == 3) { return "Miner"; }
+        elseif (type == 4) { return "Alien"; }
+        elseif (type == 5) { return "JethroHayes"; }
+        elseif (type == 6) { return "FiremanA"; }
+        elseif (type == 7) { return "Worker"; }
+        else { return "SpecialPlayerFarmer"; };
+    }
+    elseif (pid == 1)
+    {
+        if (type == 0) { return "GrenadierGuard"; }
+        elseif (type == 1) { return "MarionDunby"; }
+        elseif (type == 2) { return "ClownRobber01"; }
+        elseif (type == 3) { return "Manager"; }
+        elseif (type == 4) { return "GreyAlien"; }
+        elseif (type == 5) { return "FarmWorker"; }
+        elseif (type == 6) { return "FiremanB"; }
+        elseif (type == 7) { return "Foreman"; }
+        else { return "SpecialPlayerFarmer"; };
+    }
+    elseif (pid == 2)
+    {
+        if (type == 0) { return "Zombie"; }
+        elseif (type == 1) { return "ElliePhillips"; }
+        elseif (type == 2) { return "ClownRobber02"; }
+        elseif (type == 3) { return "MinerA"; }
+        elseif (type == 4) { return "HenrikKowalski"; }
+        elseif (type == 5) { return "Hillbilly"; }
+        elseif (type == 6) { return "FiremanC"; }
+        elseif (type == 7) { return "ConstructionWorker1"; }
+        else { return "SpecialPlayerFarmer"; };
+    }
+    elseif (pid == 3)
+    {
+        if (type == 0) { return "CaptainBluffbeard"; }
+        elseif (type == 1) { return "DoorlockHomes"; }
+        elseif (type == 2) { return "VinniePappalardo"; }
+        elseif (type == 3) { return "Miner"; }
+        elseif (type == 4) { return "ForrestBlackwellAstronaut"; }
+        elseif (type == 5) { return "FarmerA"; }
+        elseif (type == 6) { return "FiremanD"; }
+        elseif (type == 7) { return "ConstructionWorker4"; }
+        else { return "SpecialPlayerFarmer"; };
+    };
+
+    return "SpecialPlayerFarmer";
+};
+
+
+
+// ****** THIS FUNCTION IS UNUSED NOW : ******
+
+Function GetDisguiseClass(Number pid, Number type) returns Text
+{
+    // IIRC this code to make players 5 and 6 reuse the same disguises as player 1 and 2
+    // is broken, and causes things to break. If you have issues with more than 4 players,
+    // try deleting this if-statement. Make sure to delete the other one in the function above.
+    if (pid > 3)
+    {
+        pid = pid - 4;
+    };
+
+    if (pid == 0)
+    {
+        if (type == 0) { return "Special"; }
+        elseif (type == 1) { return "Special"; }
+        elseif (type == 2) { return "Criminal"; }
+        elseif (type == 3) { return "Miners"; }
+        elseif (type == 4) { return "Collectable"; }
+        elseif (type == 5) { return "Special"; }
+        elseif (type == 6) { return "Firemen"; }
+        elseif (type == 7) { return "ConstructionWorkers"; }
+        else { return "Special"; };
+    }
+    elseif (pid == 1)
+    {
+        if (type == 0) { return "Collectable"; }
+        elseif (type == 1) { return "Special"; }
+        elseif (type == 2) { return "Criminal"; }
+        elseif (type == 3) { return "Miners"; }
+        elseif (type == 4) { return "Collectable"; }
+        elseif (type == 5) { return "Pedestrian_Farmlands"; }
+        elseif (type == 6) { return "Firemen"; }
+        elseif (type == 7) { return "ConstructionWorkers"; }
+        else { return "Special"; };
+    }
+    elseif (pid == 2)
+    {
+        if (type == 0) { return "Collectable"; }
+        elseif (type == 1) { return "Special"; }
+        elseif (type == 2) { return "Criminal"; }
+        elseif (type == 3) { return "Miners"; }
+        elseif (type == 4) { return "Special"; }
+        elseif (type == 5) { return "Pedestrian_Farmlands"; }
+        elseif (type == 6) { return "Firemen"; }
+        elseif (type == 7) { return "ConstructionWorkers"; }
+        else { return "Special"; };
+    }
+    elseif (pid == 3)
+    {
+        if (type == 0) { return "Special"; }
+        elseif (type == 1) { return "Special"; }
+        elseif (type == 2) { return "Special"; }
+        elseif (type == 3) { return "Miners"; }
+        elseif (type == 4) { return "Special"; }
+        elseif (type == 5) { return "Pedestrian_Farmlands"; }
+        elseif (type == 6) { return "Firemen"; }
+        elseif (type == 7) { return "ConstructionWorkers"; }
+        else { return "Special"; };
+    };
+
+    return "Special";
+};
+
+
+Function Lerp(Position pStartPos, Position pEndPos, Number t) returns Position
+{
+    Number ax;
+    Number ay;
+    Number az;
+
+    ax = pStartPos.GetX();
+    ay = pStartPos.GetY();
+    az = pStartPos.GetZ();
+
+    Number bx;
+    Number by;
+    Number bz;
+
+    bx = pEndPos.GetX();
+    by = pEndPos.GetY();
+    bz = pEndPos.GetZ();
+
+    Number lx;
+    Number ly;
+    Number lz;
+
+    lx = ax + (bx - ax) * t;
+    ly = ay + (by - ay) * t;
+    lz = az + (bz - az) * t;
+
+    Position newPos(lx, ly, lz);
+    return newPos;
+};
+
+
+Function HandlePlayerLerp(Number nPid)
+{
+    Number nLerpStage;
+    Number nLerpStep;
+    Number nTickCount;
+
+    nLerpStage = caLerpStages.Get(nPid);
+    nLerpStep = caLerpSteps.Get(nPid);
+    nTickCount = caTickCounters.Get(nPid);
+
+    nLerpStage = nLerpStage + nLerpStep;
+    nTickCount = nTickCount + 1;
+
+    if (nLerpStage > 1.0)
+    {
+        nLerpStage = 1.0;
+    };
+
+    caLerpStages.Set(nPid, nLerpStage);
+    caTickCounters.Set(nPid, nTickCount);
+
+    Position pLerpPos;
+    Position pPrevPos;
+    Position pNewPos;
+
+    pPrevPos = caPrevPositions.Get(nPid);
+    pNewPos = caNewPositions.Get(nPid);
+    pLerpPos = Lerp(pPrevPos, pNewPos, nLerpStage);
+
+    Character cTemp;
+    cTemp = onlineChars.Get(nPid);
+    cTemp.Teleport(pLerpPos);
+    onlineChars.Set(nPid, cTemp);
+
+    Vehicle vTemp;
+    Position pOffsetPos;
+    Number nVehicleState;
+    Number nRot;
+
+    vTemp = onlineVehicles.Get(nPid);
+
+    nVehicleState = caVehicleStates.Get(nPid);
+
+    nRot = cTemp.GetDirection();
+    pOffsetPos = ApplyVehicleOffset(nVehicleState, pLerpPos);
+
+    vTemp.Teleport(pOffsetPos, nRot);
+    onlineVehicles.Set(nPid, vTemp);
+
+};
+
+
+Function GetVehicleName(Number nId) returns Text
+{
+    Text tName;
+
+    // before : elseif (nId == 2) { tName = "2016_Guardian"; }
+
+    if (nId == 1) { tName = "Hero"; }
+    elseif (nId == 2) { tName = "Bastion"; }
+    elseif (nId == 4) { tName = "Chopper"; }
+    elseif (nId == 5) { tName = "Hera"; }
+    elseif (nId == 6) { tName = "Camel"; }
+    elseif (nId == 7) { tName = "Responder"; }
+    elseif (nId == 8) { tName = "Cloud"; }
+    elseif (nId == 9) { tName = "Kongamato"; }
+    elseif (nId == 10) { tName = "SkyBringer"; }
+    elseif (nId == 11) { tName = "Swooper"; }
+    elseif (nId == 12) { tName = "UFO"; }
+    elseif (nId == 13) { tName = "Invader"; }
+    elseif (nId == 14) { tName = "Tempest"; }
+    elseif (nId == 15) { tName = "TaxiCab"; }
+    elseif (nId == 16) { tName = "Epona"; }
+    elseif (nId == 17) { tName = "Narym_Mission"; }
+    elseif (nId == 18) { tName = "Enberg"; }
+    elseif (nId == 19) { tName = "KnightShade"; }
+    elseif (nId == 20) { tName = "Gersemi"; }
+    elseif (nId == 21) { tName = "Chans_Drakonas"; }
+    elseif (nId == 22) { tName = "Indulga"; }
+    elseif (nId == 23) { tName = "MOV_Cab"; }
+    elseif (nId == 24) { tName = "Cetan"; }
+    elseif (nId == 25) { tName = "FalchionGT"; }
+    elseif (nId == 26) { tName = "Lantos"; }
+    elseif (nId == 27) { tName = "Dagyr"; }
+    elseif (nId == 28) { tName = "CombineHarvester"; }
+    elseif (nId == 29) { tName = "Gotland"; }
+    elseif (nId == 30) { tName = "Vor"; }
+    elseif (nId == 31) { tName = "Buzzer"; }
+    elseif (nId == 32) { tName = "Roamer"; }
+    elseif (nId == boatsStartNumb) { tName = "Arowana"; }
+    elseif (nId == boatsStartNumb + 1) { tName = "Liberty"; }
+    elseif (nId == boatsStartNumb + 2) { tName = "Minnow"; }
+    elseif (nId == boatsStartNumb + 3) { tName = "Drifter"; }
+    elseif (nId == boatsStartNumb + 4) { tName = "Ferry"; }
+    elseif (nId == creaturesStartNumb) { tName = "Pig"; }
+    elseif (nId == creaturesStartNumb + 1) { tName = "Uber_Behemoth"; }
+    elseif (nId == creaturesStartNumb + 2) { tName = "Uber_Behemoth"; }
+    elseif (nId == creaturesStartNumb + 3) { tName = "Megafig"; }
+    elseif (nId >= creaturesStartNumb) { tName = "Pig"; }
+    else { tName = "Hero"; };
+
+    // NOTES :
+    // For the Behemoth, before there was this line :
+    // elseif (nId == creaturesStartNumb + 1) { tName = "Behemoth"; }
+    // so the creature was syncronised but it make the game crash so i replaced this just by the red Behemoth because it don't crash.
+
+    return tName;
+};
+
+
+Function GetVehicleClass(Number nId) returns Text
+{
+    Text tClass;
+
+    if (nId == 1) { tClass = "Enforcer"; }
+    elseif (nId == 2) { tClass = "Enforcer"; }
+    elseif (nId == 4) { tClass = "Enforcer"; }
+    elseif (nId == 5) { tClass = "Aircraft"; }
+    elseif (nId == 6) { tClass = "Emergency"; }
+    elseif (nId == 7) { tClass = "Enforcer"; }
+    elseif (nId == 8) { tClass = "Aircraft"; }
+    elseif (nId == 9) { tClass = "Aircraft"; }
+    elseif (nId == 10) { tClass = "Enforcer"; }
+    elseif (nId == 11) { tClass = "Aircraft"; }
+    elseif (nId == 12) { tClass = "Aircraft"; }
+    elseif (nId == 13) { tClass = "Aircraft"; }
+    elseif (nId == 14) { tClass = "Uber"; }
+    elseif (nId == 15) { tClass = "Civic"; }
+    elseif (nId == 16) { tClass = "Civic"; }
+    elseif (nId == 17) { tClass = "MuscleCar"; }
+    elseif (nId == 18) { tClass = "MuscleCar"; }
+    elseif (nId == 19) { tClass = "MuscleCar"; }
+    elseif (nId == 20) { tClass = "SportsCar"; }
+    elseif (nId == 21) { tClass = "SportsCar"; }
+    elseif (nId == 22) { tClass = "Residential"; }
+    elseif (nId == 23) { tClass = "Enforcer"; }
+    elseif (nId == 24) { tClass = "SportsCar"; }
+    elseif (nId == 25) { tClass = "MuscleCar"; }
+    elseif (nId == 26) { tClass = "SportsCar"; }
+    elseif (nId == 27) { tClass = "SportsCar"; }
+    elseif (nId == 28) { tClass = "Farm"; }
+    elseif (nId == 29) { tClass = "Van"; }
+    elseif (nId == 30) { tClass = "Motorcycle"; }
+    elseif (nId == 31) { tClass = "Motorcycle"; }
+    elseif (nId == 32) { tClass = "Motorcycle"; }
+    elseif (nId == boatsStartNumb) { tClass = "Naval"; }
+    elseif (nId == boatsStartNumb + 1) { tClass = "Naval"; }
+    elseif (nId == boatsStartNumb + 2) { tClass = "Enforcer"; }
+    elseif (nId == boatsStartNumb + 3) { tClass = "Enforcer"; }
+    elseif (nId == boatsStartNumb + 4) { tClass = "Naval"; }
+    elseif (nId >= creaturesStartNumb) { tClass = "RideableCreature"; }
+    else { tClass = "Enforcer"; };
+    
+    return tClass;
+};
+
+
+Function ApplyVehicleOffset(Number nId, Position pPosition) returns Position
+{
+    Number x(0); // Having X and Z in this function is redundant because rotation will mess it up
+    Number y(0);
+    Number z(0);
+
+    if (nId == 1) { x = 0; y = -0.08; z = 0; }
+    elseif (nId == 2) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 3) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 4) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 5) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 6) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 7) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 8) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 9) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 10) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 11) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 12) { x = 0; y = -0.60; z = 0; }
+    elseif (nId == 13) { x = 0; y = -0.50; z = 0; }
+    elseif (nId == 14) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 15) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 16) { x = 0; y = -0.10; z = 0; }
+    elseif (nId == 17) { x = 0; y = -0.12; z = 0; }
+    else { x = 0; y = -0.1; z = 0; };
+
+    Number x_orig;
+    Number y_orig;
+    Number z_orig;
+
+    x_orig = pPosition.GetX() + x;
+    y_orig = pPosition.GetY() + y;
+    z_orig = pPosition.GetZ() + z;
+
+    Position pOffsetPos(x_orig, y_orig, z_orig);
+    return pOffsetPos;
+};
+
+
+
+Base();

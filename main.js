@@ -61,7 +61,7 @@ modManager.launcherVersion = app.getVersion();
 
 
 
-// Executed when the window is loaded :
+// Executed when the main window is loaded :
 function onWindowReloaded() {
 
     if(currentWindowType != windowTypes.MAIN) return;
@@ -93,9 +93,7 @@ function onWindowReloaded() {
     if(config['user-preferences'].background) globalVars.mainWindow.webContents.send('background', config['user-preferences'].background);
 
     // Load the mods
-    console.log('loading mods..');
     let haveModNotLoaded = modManager.loadAllMods();
-    console.log('mods loadeds');
 
     if(haveModNotLoaded) {
         console.log('1 or more mods cannot be loaded');
@@ -118,7 +116,7 @@ const createWindow = (windowtypetoopen, cusompreload, isfullscreen) => {
     let removeOldWindow = () => null;
 
     // if there are already a window openned remove it
-    if(globalVars.mainWindow != null) {
+    if(typeof windowtypetoopen != "string" && globalVars.mainWindow != null) {
 
         const windowToR = globalVars.mainWindow;
 
@@ -138,53 +136,77 @@ const createWindow = (windowtypetoopen, cusompreload, isfullscreen) => {
         windowHeight = screen.height;
     }
 
+    if(cusompreload !== false) {
 
-    globalVars.mainWindow = new BrowserWindow({
+        if(!cusompreload) {
+            cusompreload = path.join(globalVars.appLocationURL, '/interface/preload.js')
+        } else {
+            cusompreload = (cusompreload+'').startsWith('_') ? cusompreload.slice(1) : path.join(globalVars.appLocationURL, '/interface', cusompreload)
+        }
+    } else {
+        cusompreload = undefined;
+    }
+
+    let newWindowToShow = new BrowserWindow({
         width: windowWidth,
         height: windowHeight,
         fullscreen: config.fullscreen,
         webPreferences: {
-            preload: path.join(globalVars.appLocationURL, '/interface/', (cusompreload ?? 'preload.js')),
+            preload: cusompreload,
             contextIsolation: true,
             nodeIntegration: true
         }
     });
     
-    globalVars.mainWindow.setIcon(path.join(__dirname, 'icon.ico'));
+    newWindowToShow.setIcon(path.join(__dirname, 'icon.ico'));
 
-    currentWindowType = windowtypetoopen;
-
-    switch (windowtypetoopen) {
-        case windowTypes.MAIN:
-            windowtypetoopen = `file://${globalVars.appLocationURL}/interface/index.html`;
-            break;
+    if(typeof windowtypetoopen != 'string') {
         
-        case windowTypes.CHAR_EDITOR:
-            windowtypetoopen = `file://${globalVars.appLocationURL}/interface/character-builder/index.html`;
-            break;
+        globalVars.mainWindow = newWindowToShow;
+        currentWindowType = windowtypetoopen;
         
-        case windowTypes.LICENSE:
-            windowtypetoopen = `file://${globalVars.appLocationURL}/interface/license-and-copyrights/license-page.html`;
-            break;
-        
-        case windowTypes.COPYRIGHTS:
-            windowtypetoopen = `file://${globalVars.appLocationURL}/interface/license-and-copyrights/copyrights-page.html`;
-            break;
-        
-        case windowTypes.UPDATER:
-            windowtypetoopen = `file://${globalVars.appLocationURL}/interface/updater/updater.html`;
-            break;
-        
-        case windowTypes.SETTINGS_EDITOR:
-            windowtypetoopen = `file://${globalVars.appLocationURL}/interface/settings-editor/settings-editor.html`;
-            break;
+        switch (windowtypetoopen) {
+            case windowTypes.MAIN:
+                windowtypetoopen = `file://${globalVars.appLocationURL}/interface/index.html`;
+                break;
+            
+            case windowTypes.CHAR_EDITOR:
+                windowtypetoopen = `file://${globalVars.appLocationURL}/interface/character-builder/index.html`;
+                break;
+            
+            case windowTypes.LICENSE:
+                windowtypetoopen = `file://${globalVars.appLocationURL}/interface/license-and-copyrights/license-page.html`;
+                break;
+            
+            case windowTypes.COPYRIGHTS:
+                windowtypetoopen = `file://${globalVars.appLocationURL}/interface/license-and-copyrights/copyrights-page.html`;
+                break;
+                
+            case windowTypes.OTHERLICENSES:
+                windowtypetoopen = `file://${globalVars.appLocationURL}/interface/license-and-copyrights/other-licenses-page.html`;
+                break;
+            
+            case windowTypes.UPDATER:
+                windowtypetoopen = `file://${globalVars.appLocationURL}/interface/updater/updater.html`;
+                break;
+            
+            case windowTypes.SETTINGS_EDITOR:
+                windowtypetoopen = `file://${globalVars.appLocationURL}/interface/settings-editor/settings-editor.html`;
+                break;
+        }
+    } else {
+        if(windowtypetoopen.startsWith('_')) {
+            windowtypetoopen = `file://${windowtypetoopen.slice(1)}`;
+        } else {
+            windowtypetoopen = `file://${globalVars.appLocationURL}/interface/${windowtypetoopen}`;
+        }
     }
 
     // Load the .html page :
-    globalVars.mainWindow.loadURL(windowtypetoopen);
-    globalVars.mainWindow.webContents.once('dom-ready', removeOldWindow);
+    newWindowToShow.loadURL(windowtypetoopen);
+    newWindowToShow.webContents.once('dom-ready', removeOldWindow);
 
-    return globalVars.mainWindow;
+    return newWindowToShow;
 }
 globalVars.createWindow = createWindow;
 
@@ -214,7 +236,9 @@ app.on('window-all-closed', () => {
     }
 });
 
-
+app.on('will-quit', () => {
+    require('electron').globalShortcut.unregisterAll();
+});
 
 
 

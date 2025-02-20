@@ -80,8 +80,17 @@ function isOkTo(text, after) {
 
 }
 
+let isShowingPopup = false;
+let popupsToShow = [];
+
 // DONT ACTIVATE "customisable" FOR TEXT THAT ANYBODY CAN EDIT
 function showPopup(text, customisable) {
+
+    if(isShowingPopup) {
+        popupsToShow.push({text, customisable});
+        return;
+    }
+    isShowingPopup = true;
 
     const oldScrollY = scrollY;
     const oldScrollX = scrollX;
@@ -107,6 +116,8 @@ function showPopup(text, customisable) {
     border-radius: 15px;
     text-align: center;
     animation: anim-scale-poping 0.2s ease;
+
+    overflow: auto;
     `;
 
     el.innerHTML = `
@@ -141,6 +152,14 @@ function showPopup(text, customisable) {
         if(popupParent.childNodes.length == 0) popupParent.style.display = 'none';
         setScrollLock(false);
         scrollTo(oldScrollX, oldScrollY);
+
+        let nextPopup = popupsToShow.shift();
+
+        isShowingPopup = false;
+
+        if( nextPopup == null ) return;
+
+        showPopup(nextPopup.text, nextPopup.customisable);
     }
 
     popupParent.appendChild( el );
